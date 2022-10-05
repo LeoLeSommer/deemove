@@ -1,0 +1,419 @@
+import React, {
+  ReactNode,
+  createContext,
+  useReducer,
+  useContext,
+  useEffect,
+} from 'react';
+import path from 'path-browserify';
+import MediaMeta from 'react-native-media-meta';
+import {match} from 'ts-pattern';
+import {uniqBy} from 'lodash';
+import {LocalTrack} from '../models/LocalTrack';
+import {LocalArtist} from '../models/LocalArtist';
+import {LocalAlbum} from '../models/LocalAlbum';
+import {Track} from '../models/Track';
+import {Artist} from '../models/Artist';
+import {Album} from '../models/Album';
+import useSettings from './settings';
+import {getTrackFilepath} from '../api/download';
+import {recursiveLs} from '../utils/file';
+
+export type TrackStorageState = {
+  tracks: {
+    [key: string]: {
+      isLoadingFilesystem: boolean;
+      isDownloading: boolean;
+      alreadyDownloaded: boolean;
+      downloadProgress: number;
+      track?: LocalTrack;
+    };
+  };
+  artists: {
+    [key: string]: LocalArtist;
+  };
+  albums: {
+    [key: string]: LocalAlbum;
+  };
+};
+
+export type TrackStorageAction =
+  | {
+      type: 'CHECK_STORED_TRACK_START';
+      filepath: string;
+    }
+  | {
+      type: 'CHECK_STORED_TRACK_END';
+      exists: boolean;
+      filepath: string;
+      track: LocalTrack | null;
+    }
+  | {
+      type: 'CHECK_STORED_ARTIST_END';
+      artist: LocalArtist;
+    }
+  | {
+      type: 'CHECK_STORED_ALBUM_END';
+      album: LocalAlbum;
+    }
+  | {
+      type: 'DOWNLOAD_START';
+      filepath: string;
+    }
+  | {
+      type: 'DOWNLOAD_PENDING';
+      filepath: string;
+      progress: number;
+    }
+  | {
+      type: 'DOWNLOAD_ERR';
+      filepath: string;
+    }
+  | {
+      type: 'DOWNLOAD_END';
+      filepath: string;
+      track: LocalTrack;
+    };
+
+export type TrackStorageContext = TrackStorageState & {
+  dispatch: React.Dispatch<TrackStorageAction>;
+};
+
+const TrackStorageContext = createContext<TrackStorageContext>({} as any);
+
+export type TrackStorageProviderProps = {
+  children: ReactNode;
+};
+
+type Tags = {
+  title?: string;
+  artist?: string;
+  album?: string;
+};
+
+export function TrackStorageProvider({children}: TrackStorageProviderProps) {
+  const {downloadDirectory} = useSettings();
+
+  const [trackStorage, dispatch] = useReducer(
+    (state: TrackStorageState, action: TrackStorageAction) => {
+      console.log(action);
+
+      return match(action)
+        .with({type: 'CHECK_STORED_TRACK_START'}, elem => ({
+          ...state,
+          tracks: Object.assign(state.tracks, {
+            [elem.filepath]: {
+              isLoadingFilesystem: true,
+              isDownloading: false,
+              alreadyDownloaded: false,
+              downloadProgress: 0,
+            },
+          }),
+        }))
+        .with({type: 'CHECK_STORED_TRACK_END'}, elem => ({
+          ...state,
+          tracks: Object.assign(state.tracks, {
+            [elem.filepath]: {
+              isLoadingFilesystem: false,
+              isDownloading: false,
+              alreadyDownloaded: elem.exists,
+              downloadProgress: 0,
+              track: elem.track,
+            },
+          }),
+        }))
+        .with({type: 'CHECK_STORED_ARTIST_END'}, elem => ({
+          ...state,
+          artists: Object.assign(state.artists, {
+            [elem.artist.path]: elem.artist,
+          }),
+        }))
+        .with({type: 'CHECK_STORED_ALBUM_END'}, elem => ({
+          ...state,
+          albums: Object.assign(state.albums, {
+            [elem.album.path]: elem.album,
+          }),
+        }))
+        .with({type: 'DOWNLOAD_START'}, elem => ({
+          ...state,
+          tracks: Object.assign(state.tracks, {
+            [elem.filepath]: {
+              isLoadingFilesystem: false,
+              isDownloading: true,
+              alreadyDownloaded: false,
+              downloadProgress: 0,
+            },
+          }),
+        }))
+        .with({type: 'DOWNLOAD_PENDING'}, elem => ({
+          ...state,
+          tracks: Object.assign(state.tracks, {
+            [elem.filepath]: {
+              isLoadingFilesystem: false,
+              isDownloading: true,
+              alreadyDownloaded: false,
+              downloadProgress: elem.progress,
+            },
+          }),
+        }))
+        .with({type: 'DOWNLOAD_ERR'}, elem => ({
+          ...state,
+          tracks: Object.assign(state.tracks, {
+            [elem.filepath]: {
+              isLoadingFilesystem: false,
+              isDownloading: false,
+              alreadyDownloaded: false,
+              downloadProgress: 0,
+              track: undefined,
+            },
+          }),
+        }))
+        .with({type: 'DOWNLOAD_END'}, elem => ({
+          ...state,
+          tracks: Object.assign(state.tracks, {
+            [elem.filepath]: {
+              isLoadingFilesystem: false,
+              isDownloading: false,
+              alreadyDownloaded: true,
+              downloadProgress: 1,
+              track: elem.track,
+            },
+          }),
+        }))
+        .exhaustive();
+    },
+    {
+      tracks: {},
+      artists: {},
+      albums: {},
+    },
+  );
+
+  // Scan the music folder to have the local library
+  useEffect(() => {
+    async function fetchData() {
+      if (!downloadDirectory) {
+        return;
+      }
+
+      const filepaths = (await recursiveLs(downloadDirectory)).filter(
+        filepath => path.extname(filepath) === '.mp3',
+      );
+
+      const tracks = (
+        await Promise.all(
+          filepaths.map(async filepath => {
+            dispatch({
+              type: 'CHECK_STORED_TRACK_START',
+              filepath,
+            });
+
+            const tags = await MediaMeta.get(filepath);
+
+            const track = {
+              title: tags.title,
+              artist: tags.artist,
+              album: tags.album,
+              path: filepath,
+              coverPath: path.join(path.dirname(filepath), 'cover.jpg'),
+            } as LocalTrack;
+
+            if (!tags.title || !tags.artist || !tags.album) {
+              dispatch({
+                type: 'CHECK_STORED_TRACK_END',
+                exists: false,
+                filepath,
+                track: null,
+              });
+
+              return;
+            }
+
+            dispatch({
+              type: 'CHECK_STORED_TRACK_END',
+              exists: true,
+              filepath,
+              track,
+            });
+
+            return track;
+          }),
+        )
+      ).filter(track => track) as LocalTrack[];
+
+      const albums = uniqBy(
+        tracks.map(
+          track =>
+            ({
+              name: track.album,
+              artist: track.artist,
+              path: path.dirname(track.path),
+              coverPath: path.join(path.dirname(track.path), 'cover.jpg'),
+            } as LocalAlbum),
+        ),
+        track => track.path,
+      );
+
+      await Promise.all(
+        albums.map(async album => {
+          dispatch({
+            type: 'CHECK_STORED_ALBUM_END',
+            album,
+          });
+        }),
+      );
+
+      const artists = uniqBy(
+        tracks.map(
+          track =>
+            ({
+              name: track.album,
+              artist: track.artist,
+              path: path.dirname(track.path),
+              coverPath: path.join(path.dirname(track.path), 'cover.jpg'),
+            } as LocalArtist),
+        ),
+        track => track.path,
+      );
+
+      await Promise.all(
+        artists.map(async artist => {
+          dispatch({
+            type: 'CHECK_STORED_ARTIST_END',
+            artist,
+          });
+        }),
+      );
+    }
+
+    fetchData();
+  }, [downloadDirectory]);
+
+  const result = {
+    ...trackStorage,
+    dispatch,
+  };
+
+  return (
+    <TrackStorageContext.Provider value={result}>
+      {children}
+    </TrackStorageContext.Provider>
+  );
+}
+
+export default function useTrackStorage(): TrackStorageContext {
+  return useContext(TrackStorageContext);
+}
+
+export function useStoredTrack(
+  track: {
+    title: string;
+    album: string;
+    artist: string;
+  } | null,
+) {
+  const {downloadDirectory} = useSettings();
+  const {tracks} = useTrackStorage();
+  const filepath = getTrackFilepath(downloadDirectory, track);
+
+  return (filepath && tracks[filepath]?.track) || null;
+}
+
+export function useStoredTracks(): Track[] {
+  const {tracks} = useTrackStorage();
+
+  return Object.keys(tracks)
+    .filter(key => tracks[key]?.alreadyDownloaded)
+    .map(key => tracks[key]?.track as LocalTrack)
+    .filter(track => track)
+    .map(track => ({
+      id: track.path,
+      title: track.title,
+      artist: track.artist,
+      album: track.album,
+      duration: 0,
+      imageSmallUrl: `file://${track.coverPath}`,
+      imageMediumUrl: `file://${track.coverPath}`,
+      imageLargeUrl: `file://${track.coverPath}`,
+    }));
+}
+
+export function useStoredArtists(): Artist[] {
+  const {artists} = useTrackStorage();
+
+  return Object.keys(artists)
+    .map(key => artists[key])
+    .map(artist => ({
+      id: artist.path,
+      name: artist.name,
+      imageSmallUrl: `file://${artist.coverPath}`,
+      imageMediumUrl: `file://${artist.coverPath}`,
+      imageLargeUrl: `file://${artist.coverPath}`,
+    }));
+}
+
+export function useStoredArtist(path: string): Artist | null {
+  const {artists} = useTrackStorage();
+
+  return (
+    artists[path] && {
+      id: artists[path].path,
+      name: artists[path].name,
+      imageSmallUrl: `file://${artists[path].coverPath}`,
+      imageMediumUrl: `file://${artists[path].coverPath}`,
+      imageLargeUrl: `file://${artists[path].coverPath}`,
+    }
+  );
+}
+
+export function useStoredArtistTracks(path: string): Track[] {
+  const {artists} = useTrackStorage();
+  const tracks = useStoredTracks();
+  const artistName = artists[path] && artists[path].name;
+
+  return tracks.filter(track => track.artist === artistName);
+}
+
+export function useStoredArtistAlbums(path: string): Album[] {
+  const {artists} = useTrackStorage();
+  const albums = useStoredAlbums();
+  const artistName = artists[path] && artists[path].name;
+
+  return albums.filter(album => album.artistName === artistName);
+}
+
+export function useStoredAlbums(): Album[] {
+  const {albums} = useTrackStorage();
+
+  return Object.keys(albums)
+    .map(key => albums[key])
+    .map(album => ({
+      id: album.path,
+      name: album.name,
+      artistName: album.artist,
+      imageSmallUrl: `file://${album.coverPath}`,
+      imageMediumUrl: `file://${album.coverPath}`,
+      imageLargeUrl: `file://${album.coverPath}`,
+    }));
+}
+
+export function useStoredAlbum(path: string): Album | null {
+  const {albums} = useTrackStorage();
+  const tracks = useStoredTracks();
+
+  return (
+    albums[path] && {
+      id: albums[path].path,
+      name: albums[path].name,
+      artistName: albums[path].artist,
+      imageSmallUrl: `file://${albums[path].coverPath}`,
+      imageMediumUrl: `file://${albums[path].coverPath}`,
+      imageLargeUrl: `file://${albums[path].coverPath}`,
+      tracks: tracks.filter(
+        track =>
+          track.album === albums[path].name &&
+          track.artist === albums[path].artist,
+      ),
+    }
+  );
+}
