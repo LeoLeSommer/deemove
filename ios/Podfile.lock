@@ -314,6 +314,8 @@ PODS:
     - React-Core
   - react-native-meta-media (0.0.11):
     - React-Core
+  - react-native-netinfo (9.3.3):
+    - React-Core
   - react-native-pager-view (6.0.0):
     - React-Core
   - react-native-randombytes (3.6.1):
@@ -495,6 +497,7 @@ DEPENDENCIES:
   - react-native-blob-util (from `../node_modules/react-native-blob-util`)
   - react-native-document-picker (from `../node_modules/react-native-document-picker`)
   - react-native-meta-media (from `../node_modules/react-native-media-meta`)
+  - "react-native-netinfo (from `../node_modules/@react-native-community/netinfo`)"
   - react-native-pager-view (from `../node_modules/react-native-pager-view`)
   - react-native-randombytes (from `../node_modules/react-native-randombytes`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
@@ -595,6 +598,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-document-picker"
   react-native-meta-media:
     :path: "../node_modules/react-native-media-meta"
+  react-native-netinfo:
+    :path: "../node_modules/@react-native-community/netinfo"
   react-native-pager-view:
     :path: "../node_modules/react-native-pager-view"
   react-native-randombytes:
@@ -689,6 +694,7 @@ SPEC CHECKSUMS:
   react-native-blob-util: c3b0faecd2919db568e9d552084396f3e50b57c7
   react-native-document-picker: f68191637788994baed5f57d12994aa32cf8bf88
   react-native-meta-media: ee837c99adfdc2d6f14bd129b97f9bd3e84434d8
+  react-native-netinfo: b514dd6d9cd512b90e178c5b7158df1a1c568d47
   react-native-pager-view: e76d64a5114a152e942caa09136e4e250709378c
   react-native-randombytes: 421f1c7d48c0af8dbcd471b0324393ebf8fe7846
   react-native-safe-area-context: b456e1c40ec86f5593d58b275bd0e9603169daca

@@ -18,8 +18,6 @@ export function useTrackStatus(track: {
   const {tracks} = useTrackStorage();
   const filepath = getTrackFilepath(downloadDirectory, track);
 
-  console.log('track', filepath, track, filepath && tracks[filepath]);
-
   return useMemo(() => {
     if (!filepath || !tracks[filepath]) {
       return 'not-downloaded';

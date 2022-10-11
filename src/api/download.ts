@@ -112,7 +112,7 @@ export function useDownloadTrack() {
           track: {
             ...downloadInfos,
             path: filepath,
-            coverPath: path.join(path.dirname(filepath), 'coverPath.jpg'),
+            coverPath: path.join(path.dirname(filepath), 'cover.jpg'),
           },
         });
       } catch (err) {

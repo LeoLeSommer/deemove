@@ -14,8 +14,14 @@ const Tab = createMaterialTopTabNavigator();
 export default function FavoritesHomeScreen() {
   const theme = useTheme();
 
+  const containerStyle = {
+    backgroundColor: theme.colors.elevation.level1,
+    width: '100%',
+    height: '100%',
+  };
+
   return (
-    <SafeAreaView style={{height: '100%'}}>
+    <SafeAreaView style={containerStyle}>
       <Tab.Navigator
         sceneContainerStyle={{backgroundColor: theme.colors.background}}
         screenOptions={{

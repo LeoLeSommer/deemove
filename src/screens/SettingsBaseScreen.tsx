@@ -3,8 +3,7 @@ import {SafeAreaView} from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 import RNFetchBlob from 'react-native-blob-util';
 import {Appbar, List, useTheme, Switch} from 'react-native-paper';
-import DocumentPicker from 'react-native-document-picker';
-import path from 'path-browserify';
+import {selectDirectory} from 'react-native-directory-picker';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import useUser from '../hooks/user';
@@ -21,13 +20,11 @@ export default function SettingsBaseScreen() {
     useSettings();
 
   const pickDownloadDirectory = useCallback(async () => {
-    const newValue = await DocumentPicker.pickDirectory();
+    const result = await selectDirectory();
+    const newDirectory = result && (await RNFetchBlob.fs.stat(result)).path;
 
-    if (newValue) {
-      setDownloadDirectory(
-        path.join(RNFetchBlob.fs.dirs.MusicDir),
-        //path.join(RNFS.ExternalStorageDirectoryPath, 'Music'),
-      );
+    if (newDirectory) {
+      setDownloadDirectory(newDirectory);
     }
   }, [setDownloadDirectory]);
 

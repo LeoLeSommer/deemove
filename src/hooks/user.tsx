@@ -7,6 +7,7 @@ import React, {
   useState,
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useNetInfo} from '@react-native-community/netinfo';
 import {useLogin} from '../api/login';
 
 export type UserContext = {
@@ -32,6 +33,8 @@ export function UserProvider({children}: UserProviderProps) {
     null,
   );
   const [offlineMode, setOfflineMode] = useState(false);
+  const {isInternetReachable} = useNetInfo();
+
   let callLogin = useLogin();
 
   // Authenticate with stored tokens
@@ -81,8 +84,7 @@ export function UserProvider({children}: UserProviderProps) {
     oldApiAccessToken,
     displayLogin: accessToken == null && !offlineMode,
     isLogged: accessToken != null,
-    //offlineMode,
-    offlineMode: true,
+    offlineMode: offlineMode || !isInternetReachable,
     login,
     logout,
     useOfflineMode,

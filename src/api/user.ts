@@ -47,10 +47,14 @@ export function useTrendy() {
     'editorial/0/charts',
     data =>
       ({
-        trendyTracks: data ? data.tracks.data.map(mapTrack) : [],
-        trendyAlbums: data ? data.albums.data.map(mapAlbum) : [],
-        trendyArtists: data ? data.artists.data.map(mapArtist) : [],
-        trendyPlaylists: data ? data.playlists.data.map(mapPlaylist) : [],
+        trendyTracks: data?.tracks?.data ? data.tracks.data.map(mapTrack) : [],
+        trendyAlbums: data?.albums?.data ? data.albums.data.map(mapAlbum) : [],
+        trendyArtists: data?.artists?.data
+          ? data.artists.data.map(mapArtist)
+          : [],
+        trendyPlaylists: data?.playlists?.data
+          ? data.playlists.data.map(mapPlaylist)
+          : [],
       } as {
         trendyTracks: Track[];
         trendyAlbums: Album[];
