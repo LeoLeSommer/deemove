@@ -6,19 +6,23 @@ import React, {
   useCallback,
 } from 'react';
 
-export type MusicPlayerContext = {
+export type MusicPlayerScreenContext = {
   musicPlayerDisplayed: boolean;
   showMusicPlayer: () => void;
   hideMusicPlayer: () => void;
 };
 
-const MusicPlayerContext = createContext<MusicPlayerContext>({} as any);
+const MusicPlayerScreenContext = createContext<MusicPlayerScreenContext>(
+  {} as any,
+);
 
-export type MusicPlayerProviderProps = {
+export type MusicPlayerScreenProviderProps = {
   children: ReactNode;
 };
 
-export function MusicPlayerProvider({children}: MusicPlayerProviderProps) {
+export function MusicPlayerScreenProvider({
+  children,
+}: MusicPlayerScreenProviderProps) {
   const [musicPlayerDisplayed, setMusicPlayerDisplayed] = useState(false);
 
   const showMusicPlayer = useCallback(() => setMusicPlayerDisplayed(true), []);
@@ -31,12 +35,12 @@ export function MusicPlayerProvider({children}: MusicPlayerProviderProps) {
   };
 
   return (
-    <MusicPlayerContext.Provider value={result}>
+    <MusicPlayerScreenContext.Provider value={result}>
       {children}
-    </MusicPlayerContext.Provider>
+    </MusicPlayerScreenContext.Provider>
   );
 }
 
-export default function useMusicPlayer(): MusicPlayerContext {
-  return useContext(MusicPlayerContext);
+export default function useMusicPlayerScreen(): MusicPlayerScreenContext {
+  return useContext(MusicPlayerScreenContext);
 }

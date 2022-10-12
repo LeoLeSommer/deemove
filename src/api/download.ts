@@ -15,6 +15,8 @@ import useTrackStorage, {TrackStorageAction} from '../hooks/trackStorage';
 import useCookie from '../hooks/cookie';
 import useUser from '../hooks/user';
 import {blowfishDecrypt, generateBlowfishKey} from '../utils/crypto';
+import useError from '../hooks/error';
+import {DeezerApiError} from '../models/DeezerApiError';
 
 export function useTrackDownloadInfos(trackId: string) {
   return useDeezerOldApiEntry('song.getData', mapTrackDownloadInfos, {
@@ -50,6 +52,7 @@ export function useDownloadTrack() {
   const {cookie} = useCookie();
   const {dispatch} = useTrackStorage();
   const {downloadDirectory} = useSettings();
+  const {pushError} = useError();
 
   return useCallback(
     async (trackId: string) => {
@@ -58,6 +61,7 @@ export function useDownloadTrack() {
         trackId,
         oldApiAccessToken,
         cookie,
+        pushError,
       );
 
       if (!downloadDirectory || !downloadInfos) {
@@ -93,7 +97,13 @@ export function useDownloadTrack() {
         // Download the track
         const tempFilepath = filepath + 'temp';
         await deleteIfExists(tempFilepath);
-        await downloadTrack(trackId, tempFilepath, downloadInfos, dispatch);
+        await downloadTrack(
+          trackId,
+          filepath,
+          tempFilepath,
+          downloadInfos,
+          dispatch,
+        );
 
         // Decrypt the track
         await deleteIfExists(filepath);
@@ -126,7 +136,7 @@ export function useDownloadTrack() {
         });
       }
     },
-    [dispatch, cookie, oldApiAccessToken, downloadDirectory],
+    [dispatch, cookie, oldApiAccessToken, downloadDirectory, pushError],
   );
 }
 
@@ -134,6 +144,7 @@ function getTrackDownloadInfos(
   trackId: string,
   oldApiAccessToken: string | null,
   cookie: Cookie,
+  pushError: (err: DeezerApiError | Error) => void,
 ) {
   return getDeezerOldApiEntry(
     'song.getData',
@@ -144,17 +155,19 @@ function getTrackDownloadInfos(
     {},
     oldApiAccessToken,
     cookie,
+    pushError,
   );
 }
 
 async function downloadTrack(
   trackId: string,
   filepath: string,
+  tempFilepath: string,
   downloadInfos: TrackDownloadInfos,
   dispatch: React.Dispatch<TrackStorageAction>,
 ) {
   return RNFetchBlob.config({
-    path: filepath,
+    path: tempFilepath,
   })
     .fetch('GET', downloadInfos.url)
     .progress((received, total) => {

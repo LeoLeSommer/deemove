@@ -12,17 +12,17 @@ import {
   useLikeOrUnlikeTrack,
 } from '../../api/favoriteTracks';
 import {useTrackFromLabels} from '../../api/track';
-import useMusicPlayer from '../../hooks/musicPlayer';
-import usePlayer, {usePlayerProgress} from '../../hooks/player';
+import useMusicPlayerScreen from '../../hooks/musicPlayerScreen';
+import usePlayer, {usePlayProgress} from '../../hooks/playQueue';
 import {useStoredTrack} from '../../hooks/trackStorage';
 import useUser from '../../hooks/user';
 
 export default function BottomMusicPlayer() {
   const theme = useTheme();
   const {play, pause, currentTrack, nextTrack, state} = usePlayer();
-  const {progress} = usePlayerProgress();
+  const {progress} = usePlayProgress();
   const track = useStoredTrack(currentTrack);
-  const {showMusicPlayer} = useMusicPlayer();
+  const {showMusicPlayer} = useMusicPlayerScreen();
 
   const {offlineMode} = useUser();
   const {data: onlineTrack} = useTrackFromLabels(track);

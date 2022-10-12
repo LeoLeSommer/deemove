@@ -39,7 +39,6 @@ export function useLogin() {
 
         // Login for old API
         const arl = await getArlFromAccessToken(accessToken);
-
         const oldApiAccessToken = await loginViaArl(arl, setCookie);
 
         return {
@@ -55,7 +54,9 @@ export function useLogin() {
   );
 }
 
-async function getArlFromAccessToken(accessToken: string): Promise<string> {
+export async function getArlFromAccessToken(
+  accessToken: string,
+): Promise<string> {
   try {
     await axios.get('https://api.deezer.com/platform/generic/track/3135556', {
       headers: {
@@ -66,19 +67,20 @@ async function getArlFromAccessToken(accessToken: string): Promise<string> {
     throw new DeezerApiError(err.message, 'INCORRECT_REGION');
   }
 
-  console.log('response');
   let response = await axios.get(
     'https://www.deezer.com/ajax/gw-light.php?method=user.getArl&input=3&api_version=1.0&api_token=null',
     {
       headers: httpHeaders,
     },
   );
-  console.log(response);
 
   return response.data.results.trim();
 }
 
-async function loginViaArl(arl: string, setCookie: (cookie: Cookie) => void) {
+export async function loginViaArl(
+  arl: string,
+  setCookie: (cookie: Cookie) => void,
+) {
   // Create cookie
   let cookie = new Cookie({
     key: 'arl',

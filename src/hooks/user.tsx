@@ -8,7 +8,8 @@ import React, {
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useNetInfo} from '@react-native-community/netinfo';
-import {useLogin} from '../api/login';
+import {useLogin, getArlFromAccessToken, loginViaArl} from '../api/login';
+import useCookie from './cookie';
 
 export type UserContext = {
   accessToken: string | null;
@@ -35,19 +36,25 @@ export function UserProvider({children}: UserProviderProps) {
   const [offlineMode, setOfflineMode] = useState(false);
   const {isInternetReachable} = useNetInfo();
 
-  let callLogin = useLogin();
+  const callLogin = useLogin();
+  const {setCookie} = useCookie();
 
   // Authenticate with stored tokens
   useEffect(() => {
-    AsyncStorage.getItem('@auth_tokens').then(value => {
-      if (value) {
-        const tokens = JSON.parse(value);
+    const fetchData = async () => {
+      const storedAccessToken = await AsyncStorage.getItem('@auth_tokens');
 
-        setAccessToken(tokens.accessToken);
-        setOldApiAccessToken(tokens.oldApiAccessToken);
+      if (storedAccessToken) {
+        const arl = await getArlFromAccessToken(storedAccessToken);
+        const newOldApiAccessToken = await loginViaArl(arl, setCookie);
+
+        setAccessToken(storedAccessToken);
+        setOldApiAccessToken(newOldApiAccessToken);
       }
-    });
-  }, []);
+    };
+
+    fetchData();
+  }, [setCookie]);
 
   const login = useCallback(
     async (email: string, password: string) => {
@@ -56,13 +63,7 @@ export function UserProvider({children}: UserProviderProps) {
         oldApiAccessToken: newOldApiAccessToken,
       } = await callLogin(email, password);
 
-      await AsyncStorage.setItem(
-        '@auth_tokens',
-        JSON.stringify({
-          accessToken: newAccessToken,
-          oldApiAccessToken: newOldApiAccessToken,
-        }),
-      );
+      await AsyncStorage.setItem('@auth_tokens', newAccessToken);
 
       setAccessToken(newAccessToken);
       setOldApiAccessToken(newOldApiAccessToken);

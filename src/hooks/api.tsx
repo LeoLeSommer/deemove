@@ -5,6 +5,7 @@ import {CookieJar, Cookie} from 'tough-cookie';
 import useUser from './user';
 import useCookie from './cookie';
 import {DeezerApiError} from '../models/DeezerApiError';
+import useError from './error';
 
 export const CLIENT_ID = '172365';
 export const CLIENT_SECRET = 'fb0bec7ccc063dab0417eb7b0d847f34';
@@ -176,6 +177,7 @@ export function useDeezerOldApiEntry<T>(
 } {
   const {cookie} = useCookie();
   const {oldApiAccessToken} = useUser();
+  const {pushError} = useError();
 
   const result = useQuery(
     [method, oldApiAccessToken, JSON.stringify(args), JSON.stringify(params)],
@@ -187,6 +189,7 @@ export function useDeezerOldApiEntry<T>(
         params,
         oldApiAccessToken,
         cookie,
+        pushError,
       ),
   );
 
@@ -203,6 +206,7 @@ export async function getDeezerOldApiEntry<T>(
   params = {},
   oldApiAccessToken: string | null,
   cookie: Cookie,
+  pushError: (err: DeezerApiError | Error) => void,
 ) {
   const response = await axios.post(
     'https://www.deezer.com/ajax/gw-light.php',
@@ -223,8 +227,13 @@ export async function getDeezerOldApiEntry<T>(
     },
   );
 
-  if (response.data.error && response.data.error.length > 0) {
-    throw response.data.error;
+  if (response.data.error && Object.keys(response.data.error).length > 0) {
+    const errorKey = Object.keys(response.data.error)[0];
+    const errorMessage = response.data.error[errorKey];
+
+    const error = new DeezerApiError(errorMessage, errorKey);
+    pushError(error);
+    throw error;
   }
 
   let data = response.data.results;

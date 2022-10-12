@@ -1,5 +1,5 @@
 import React, {useCallback, useState} from 'react';
-import {SafeAreaView, ScrollView} from 'react-native';
+import {SafeAreaView, ScrollView, StyleSheet} from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 import RNFetchBlob from 'react-native-blob-util';
 import {Appbar, List, useTheme, Switch, Menu} from 'react-native-paper';
@@ -82,6 +82,7 @@ export default function SettingsBaseScreen() {
         <Menu
           visible={pickSimultaneousDownloads}
           onDismiss={() => setPickSimultaneousDownloads(false)}
+          style={styles.pickerMenu}
           anchor={
             <List.Item
               title={locales.settings.simultaneousDownloads}
@@ -117,3 +118,10 @@ export default function SettingsBaseScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  pickerMenu: {
+    width: '100%',
+    position: 'absolute',
+  },
+});

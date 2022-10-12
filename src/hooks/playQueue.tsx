@@ -19,33 +19,33 @@ import TrackPlayer, {
 import {match} from 'ts-pattern';
 import useTrackStorage from './trackStorage';
 
-export type PlayerState = 'stopped' | 'playing' | 'paused';
+export type PlayQueueState = 'stopped' | 'playing' | 'paused';
 
-export type PlayerContext = {
+export type PlayQueueContext = {
   playTrack: (path: string) => Promise<void>;
   addTrackToQueue: (path: string) => Promise<void>;
   play: () => Promise<void>;
   pause: () => Promise<void>;
   stop: () => Promise<void>;
   status: () => Promise<void>;
-  state: PlayerState;
+  state: PlayQueueState;
   currentTrack: string | null;
   previousTrack: string | null;
   nextTrack: string | null;
 };
 
-const PlayerContext = createContext<PlayerContext>({} as any);
+const PlayQueueContext = createContext<PlayQueueContext>({} as any);
 
-export type PlayerProviderProps = {
+export type PlayQueueProviderProps = {
   children: ReactNode;
 };
 
-export function PlayerProvider({children}: PlayerProviderProps) {
+export function PlayQueueProvider({children}: PlayQueueProviderProps) {
   const {tracks} = useTrackStorage();
   const [currentTrack, setCurrentTrack] = useState<string | null>(null);
   const [nextTrack, setNextTrack] = useState<string | null>(null);
   const [previousTrack /*, setPreviousTrack*/] = useState<string | null>(null);
-  const [state, setState] = useState<PlayerState>('stopped');
+  const [state, setState] = useState<PlayQueueState>('stopped');
 
   // Initialize
   useEffect(() => {
@@ -116,14 +116,14 @@ export function PlayerProvider({children}: PlayerProviderProps) {
   useTrackPlayerEvents([Event.PlaybackState], (event: PlaybackStateEvent) => {
     setState(
       match(event.state)
-        .with(State.None, () => 'stopped' as PlayerState)
-        .with(State.Ready, () => 'playing' as PlayerState)
-        .with(State.Playing, () => 'playing' as PlayerState)
-        .with(State.Paused, () => 'paused' as PlayerState)
-        .with(State.Stopped, () => 'stopped' as PlayerState)
-        .with(State.Buffering, () => 'playing' as PlayerState)
-        .with(State.Connecting, () => 'paused' as PlayerState)
-        .otherwise(() => 'stopped' as PlayerState),
+        .with(State.None, () => 'stopped' as PlayQueueState)
+        .with(State.Ready, () => 'playing' as PlayQueueState)
+        .with(State.Playing, () => 'playing' as PlayQueueState)
+        .with(State.Paused, () => 'paused' as PlayQueueState)
+        .with(State.Stopped, () => 'stopped' as PlayQueueState)
+        .with(State.Buffering, () => 'playing' as PlayQueueState)
+        .with(State.Connecting, () => 'paused' as PlayQueueState)
+        .otherwise(() => 'stopped' as PlayQueueState),
     );
   });
 
@@ -198,15 +198,17 @@ export function PlayerProvider({children}: PlayerProviderProps) {
   };
 
   return (
-    <PlayerContext.Provider value={result}>{children}</PlayerContext.Provider>
+    <PlayQueueContext.Provider value={result}>
+      {children}
+    </PlayQueueContext.Provider>
   );
 }
 
-export default function usePlayer(): PlayerContext {
-  return useContext(PlayerContext);
+export default function usePlayQueue(): PlayQueueContext {
+  return useContext(PlayQueueContext);
 }
 
-export function usePlayerProgress() {
+export function usePlayProgress() {
   const {duration, position} = useProgress();
   const setProgress = useCallback(
     async (value: number) => {

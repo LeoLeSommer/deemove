@@ -8,13 +8,13 @@ import LibraryScreen from './LibraryScreen';
 import SettingsScreen from './SettingsScreen';
 import BottomMusicPlayer from '../components/molecules/BottomMusicPlayer';
 import MusicPlayerScreen from './MusicPlayerScreen';
-import useMusicPlayer from '../hooks/musicPlayer';
+import useMusicPlayerScreen from '../hooks/musicPlayerScreen';
 import locales from '../locales';
 import useUser from '../hooks/user';
 
 export default function MainTabsScreen() {
   const [index, setIndex] = React.useState(0);
-  const {musicPlayerDisplayed} = useMusicPlayer();
+  const {musicPlayerDisplayed} = useMusicPlayerScreen();
   const {offlineMode} = useUser();
 
   const routes = useMemo(

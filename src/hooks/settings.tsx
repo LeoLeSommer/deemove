@@ -7,6 +7,7 @@ import React, {
   useContext,
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import RNFetchBlob from 'react-native-blob-util';
 
 export type SettingsContext = {
   darkMode: boolean;
@@ -27,7 +28,7 @@ export function SettingsProvider({children}: SettingsProviderProps) {
   const [darkMode, setDarkModeInternal] = useState(true);
   const [downloadDirectory, setDownloadDirectoryInternal] = useState<
     string | null
-  >('content://com.android.externalstorage.documents/tree/primary%3AMusic');
+  >(RNFetchBlob.fs.dirs.MusicDir);
   const [simultaneousDownloads, setSimultaneousDownloadsInternal] = useState(3);
 
   // Load dark mode from stored settings

@@ -15,10 +15,10 @@ import MainTabsScreen from './screens/MainTabsScreen';
 import LoginScreen from './screens/LoginScreen';
 import {CookieProvider} from './hooks/cookie';
 import useUser, {UserProvider} from './hooks/user';
-import {PlayerProvider} from './hooks/player';
+import {PlayQueueProvider} from './hooks/playQueue';
 import useSettings, {SettingsProvider} from './hooks/settings';
 import {DownloadQueueProvider} from './hooks/downloadQueue';
-import {MusicPlayerProvider} from './hooks/musicPlayer';
+import {MusicPlayerScreenProvider} from './hooks/musicPlayerScreen';
 import useError, {ErrorProvider} from './hooks/error';
 
 const queryClient = new QueryClient();
@@ -31,13 +31,13 @@ export default function App() {
           <CookieProvider>
             <UserProvider>
               <TrackStorageProvider>
-                <PlayerProvider>
+                <PlayQueueProvider>
                   <DownloadQueueProvider>
-                    <MusicPlayerProvider>
+                    <MusicPlayerScreenProvider>
                       <StyleContainer />
-                    </MusicPlayerProvider>
+                    </MusicPlayerScreenProvider>
                   </DownloadQueueProvider>
-                </PlayerProvider>
+                </PlayQueueProvider>
               </TrackStorageProvider>
             </UserProvider>
           </CookieProvider>

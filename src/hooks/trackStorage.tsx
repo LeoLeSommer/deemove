@@ -130,7 +130,7 @@ export function TrackStorageProvider({children}: TrackStorageProviderProps) {
       return match(action)
         .with({type: 'CHECK_STORED_TRACK_START'}, elem => ({
           ...state,
-          tracks: Object.assign(state.tracks, {
+          tracks: Object.assign({}, state.tracks, {
             [elem.filepath]: {
               isLoadingFilesystem: true,
               isDownloading: false,
@@ -141,7 +141,7 @@ export function TrackStorageProvider({children}: TrackStorageProviderProps) {
         }))
         .with({type: 'CHECK_STORED_TRACK_END'}, elem => ({
           ...state,
-          tracks: Object.assign(state.tracks, {
+          tracks: Object.assign({}, state.tracks, {
             [elem.filepath]: {
               isLoadingFilesystem: false,
               isDownloading: false,
@@ -153,13 +153,13 @@ export function TrackStorageProvider({children}: TrackStorageProviderProps) {
         }))
         .with({type: 'CHECK_STORED_ARTIST_END'}, elem => ({
           ...state,
-          artists: Object.assign(state.artists, {
+          artists: Object.assign({}, state.artists, {
             [elem.artist.path]: elem.artist,
           }),
         }))
         .with({type: 'CHECK_STORED_ALBUM_END'}, elem => ({
           ...state,
-          albums: Object.assign(state.albums, {
+          albums: Object.assign({}, state.albums, {
             [elem.album.path]: elem.album,
           }),
         }))
@@ -174,7 +174,7 @@ export function TrackStorageProvider({children}: TrackStorageProviderProps) {
         }))
         .with({type: 'DOWNLOAD_START'}, elem => ({
           ...state,
-          tracks: Object.assign(state.tracks, {
+          tracks: Object.assign({}, state.tracks, {
             [elem.filepath]: {
               isLoadingFilesystem: false,
               isDownloading: true,
@@ -190,7 +190,7 @@ export function TrackStorageProvider({children}: TrackStorageProviderProps) {
         }))
         .with({type: 'DOWNLOAD_PENDING'}, elem => ({
           ...state,
-          tracks: Object.assign(state.tracks, {
+          tracks: Object.assign({}, state.tracks, {
             [elem.filepath]: {
               isLoadingFilesystem: false,
               isDownloading: true,
@@ -201,7 +201,7 @@ export function TrackStorageProvider({children}: TrackStorageProviderProps) {
         }))
         .with({type: 'DOWNLOAD_ERR'}, elem => ({
           ...state,
-          tracks: Object.assign(state.tracks, {
+          tracks: Object.assign({}, state.tracks, {
             [elem.filepath]: {
               isLoadingFilesystem: false,
               isDownloading: false,
@@ -218,7 +218,7 @@ export function TrackStorageProvider({children}: TrackStorageProviderProps) {
         }))
         .with({type: 'DOWNLOAD_END'}, elem => ({
           ...state,
-          tracks: Object.assign(state.tracks, {
+          tracks: Object.assign({}, state.tracks, {
             [elem.filepath]: {
               isLoadingFilesystem: false,
               isDownloading: false,

@@ -12,9 +12,9 @@
 - [x] Add a way to remove downloaded tracks
 - [x] Add a way to select how many parallel download are allowed
 - [ ] Add a way to download an entire playlist/album/my favorites ...
+- [ ] Add a play queue system
 - [ ] Handle requests errors
 - [ ] Renew token when needed
-- [ ] Add a play queue system
 - [ ] Improve interface
 - [ ] Add translations at least for english
 - [ ] Bonus: offline playlist

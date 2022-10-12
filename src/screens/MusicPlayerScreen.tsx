@@ -12,9 +12,9 @@ import {SvgUri} from 'react-native-svg';
 import AnimatedLinearGradient from 'react-native-animated-linear-gradient';
 import mix from 'mix-css-color';
 import Slider from '../components/input/Slider';
-import usePlayer, {usePlayerProgress} from '../hooks/player';
+import usePlayer, {usePlayProgress} from '../hooks/playQueue';
 import {useStoredTrack} from '../hooks/trackStorage';
-import useMusicPlayer from '../hooks/musicPlayer';
+import useMusicPlayerScreen from '../hooks/musicPlayerScreen';
 import useUser from '../hooks/user';
 import {useTrackFromLabels} from '../api/track';
 import {useIsFavoriteTrack, useLikeOrUnlikeTrack} from '../api/favoriteTracks';
@@ -26,9 +26,9 @@ export default function MusicPlayerScreen() {
   const theme = useTheme();
   const {play, pause, currentTrack, nextTrack, previousTrack, state} =
     usePlayer();
-  const {progress, setProgress} = usePlayerProgress();
+  const {progress, setProgress} = usePlayProgress();
   const track = useStoredTrack(currentTrack);
-  const {hideMusicPlayer} = useMusicPlayer();
+  const {hideMusicPlayer} = useMusicPlayerScreen();
 
   const {offlineMode} = useUser();
   const {data: onlineTrack} = useTrackFromLabels(track);

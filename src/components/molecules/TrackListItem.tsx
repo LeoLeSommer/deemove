@@ -11,7 +11,7 @@ import locales from '../../locales';
 import {useTrackStatus} from '../../api/stored';
 import {getTrackFilepath} from '../../api/download';
 import useDownloadQueue from '../../hooks/downloadQueue';
-import usePlayer from '../../hooks/player';
+import usePlayer from '../../hooks/playQueue';
 import {Track} from '../../models/Track';
 import useUser from '../../hooks/user';
 import useSettings from '../../hooks/settings';
