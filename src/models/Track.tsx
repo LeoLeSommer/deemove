@@ -11,7 +11,7 @@ export type Track = {
 
 export function mapTrack(raw: any): Track {
   return {
-    id: raw.id,
+    id: raw.id.toString(),
     title: raw?.title,
     artist: raw?.artist?.name,
     album: raw?.album?.title,

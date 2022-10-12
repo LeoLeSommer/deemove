@@ -16,8 +16,13 @@ import {Track} from '../models/Track';
 import {Artist} from '../models/Artist';
 import {Album} from '../models/Album';
 import useSettings from './settings';
-import {getTrackFilepath} from '../api/download';
 import {recursiveLs} from '../utils/file';
+import {upsert} from '../utils/array';
+
+export type DownloadQueueElem = {
+  trackId: string;
+  status: 'downloading' | 'pending';
+};
 
 export type TrackStorageState = {
   tracks: {
@@ -35,6 +40,7 @@ export type TrackStorageState = {
   albums: {
     [key: string]: LocalAlbum;
   };
+  downloadQueue: DownloadQueueElem[];
 };
 
 export type TrackStorageAction =
@@ -58,21 +64,37 @@ export type TrackStorageAction =
     }
   | {
       type: 'DOWNLOAD_START';
+      trackId: string;
       filepath: string;
     }
   | {
       type: 'DOWNLOAD_PENDING';
+      trackId: string;
       filepath: string;
       progress: number;
     }
   | {
       type: 'DOWNLOAD_ERR';
+      trackId: string;
       filepath: string;
     }
   | {
       type: 'DOWNLOAD_END';
+      trackId: string;
       filepath: string;
       track: LocalTrack;
+    }
+  | {
+      type: 'DOWNLOAD_REQUESTED';
+      trackId: string;
+    }
+  | {
+      type: 'DOWNLOAD_REQUEST_REMOVED';
+      trackId: string;
+    }
+  | {
+      type: 'DOWNLOAD_QUEUE_LOADED';
+      trackIds: string[];
     };
 
 export type TrackStorageContext = TrackStorageState & {
@@ -144,6 +166,11 @@ export function TrackStorageProvider({children}: TrackStorageProviderProps) {
               downloadProgress: 0,
             },
           }),
+          downloadQueue: upsert<DownloadQueueElem>(
+            state.downloadQueue,
+            downloadItem => downloadItem.trackId === elem.trackId,
+            () => ({trackId: elem.trackId, status: 'downloading'}),
+          ),
         }))
         .with({type: 'DOWNLOAD_PENDING'}, elem => ({
           ...state,
@@ -167,6 +194,11 @@ export function TrackStorageProvider({children}: TrackStorageProviderProps) {
               track: undefined,
             },
           }),
+          downloadQueue: upsert<DownloadQueueElem>(
+            state.downloadQueue,
+            downloadItem => downloadItem.trackId === elem.trackId,
+            () => ({trackId: elem.trackId, status: 'pending'}),
+          ),
         }))
         .with({type: 'DOWNLOAD_END'}, elem => ({
           ...state,
@@ -178,7 +210,33 @@ export function TrackStorageProvider({children}: TrackStorageProviderProps) {
               downloadProgress: 1,
               track: elem.track,
             },
+            downloadQueue: state.downloadQueue.filter(
+              queueItem => elem.trackId !== queueItem.trackId,
+            ),
           }),
+        }))
+        .with({type: 'DOWNLOAD_REQUESTED'}, elem => ({
+          ...state,
+          downloadQueue: [
+            ...state.downloadQueue,
+            {trackId: elem.trackId, status: 'pending'} as DownloadQueueElem,
+          ],
+        }))
+        .with({type: 'DOWNLOAD_REQUEST_REMOVED'}, elem => ({
+          ...state,
+          downloadQueue: state.downloadQueue.filter(
+            queueItem => elem.trackId !== queueItem.trackId,
+          ),
+        }))
+        .with({type: 'DOWNLOAD_QUEUE_LOADED'}, elem => ({
+          ...state,
+          downloadQueue: elem.trackIds.map(
+            trackId =>
+              ({
+                trackId: trackId,
+                status: 'pending',
+              } as DownloadQueueElem),
+          ),
         }))
         .exhaustive();
     },
@@ -186,6 +244,7 @@ export function TrackStorageProvider({children}: TrackStorageProviderProps) {
       tracks: {},
       artists: {},
       albums: {},
+      downloadQueue: [],
     },
   );
 
@@ -305,18 +364,9 @@ export default function useTrackStorage(): TrackStorageContext {
   return useContext(TrackStorageContext);
 }
 
-export function useStoredTrack(
-  track: {
-    title: string;
-    album: string;
-    artist: string;
-  } | null,
-) {
-  const {downloadDirectory} = useSettings();
+export function useStoredTrack(path: string | null) {
   const {tracks} = useTrackStorage();
-  const filepath = getTrackFilepath(downloadDirectory, track);
-
-  return (filepath && tracks[filepath]?.track) || null;
+  return (path && tracks[path]?.track) || null;
 }
 
 export function useStoredTracks(): Track[] {

@@ -14,8 +14,10 @@ import Slider from '../components/input/Slider';
 import usePlayer, {usePlayerProgress} from '../hooks/player';
 import {useStoredTrack} from '../hooks/trackStorage';
 import useMusicPlayer from '../hooks/musicPlayer';
+import useUser from '../hooks/user';
+import {useTrackFromLabels} from '../api/track';
+import {useIsFavoriteTrack, useLikeOrUnlikeTrack} from '../api/favoriteTracks';
 
-const logo = require('../assets/cover.jpg');
 const swapIcon = require('../assets/swap-icon.svg');
 const loopIcon = require('../assets/loop-icon.svg');
 
@@ -26,6 +28,11 @@ export default function MusicPlayerScreen() {
   const {progress, setProgress} = usePlayerProgress();
   const track = useStoredTrack(currentTrack);
   const {hideMusicPlayer} = useMusicPlayer();
+
+  const {offlineMode} = useUser();
+  const {data: onlineTrack} = useTrackFromLabels(track);
+  const isFavorite = useIsFavoriteTrack(onlineTrack?.id);
+  const likeOrUnlike = useLikeOrUnlikeTrack(onlineTrack?.id);
 
   const backgroundColors = useMemo(
     () => [
@@ -43,19 +50,34 @@ export default function MusicPlayerScreen() {
     <AnimatedLinearGradient customColors={backgroundColors} speed={4000}>
       <View style={styles.container}>
         <IconButton
-          icon="close"
+          icon="arrow-left"
           onPress={hideMusicPlayer}
-          style={styles.closeButton}
+          style={styles.backButton}
         />
         <View style={styles.coverContainer}>
           <Card style={styles.cover}>
-            <Image source={logo} style={styles.coverImage} resizeMode="cover" />
+            {track && (
+              <Image
+                source={{uri: `file://${track.coverPath}`}}
+                style={styles.coverImage}
+                resizeMode="cover"
+              />
+            )}
           </Card>
         </View>
-        <View style={styles.contentContainer}>
-          <View>
-            <Title style={styles.track}>{track?.title}</Title>
-            <Subheading>{track?.artist}</Subheading>
+        <View style={styles.middleContainer}>
+          <View style={styles.contentContainer}>
+            <View>
+              <Title style={styles.track}>{track?.title}</Title>
+              <Subheading>{track?.artist}</Subheading>
+            </View>
+            {!offlineMode && onlineTrack && (
+              <IconButton
+                icon={isFavorite ? 'heart' : 'heart-outline'}
+                size={26}
+                onPress={likeOrUnlike.mutateAsync}
+              />
+            )}
           </View>
           <Slider
             value={progress}
@@ -131,10 +153,8 @@ const styles = StyleSheet.create({
     height: '100%',
     paddingHorizontal: 40,
   },
-  closeButton: {
+  backButton: {
     position: 'absolute',
-    top: 10,
-    right: 10,
   },
   coverContainer: {
     alignItems: 'center',
@@ -152,9 +172,14 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  contentContainer: {
+  middleContainer: {
     justifyContent: 'space-between',
     flex: 1,
+  },
+  contentContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   track: {
     fontWeight: 'bold',

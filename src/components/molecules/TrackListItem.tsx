@@ -9,12 +9,16 @@ import {
 } from 'react-native-paper';
 import locales from '../../locales';
 import {useTrackStatus} from '../../api/stored';
-import {useLikeOrUnlikeTrack} from '../../api/track';
+import {getTrackFilepath} from '../../api/download';
 import useDownloadQueue from '../../hooks/downloadQueue';
-import {useIsFavoriteTrack} from '../../hooks/favorites';
 import usePlayer from '../../hooks/player';
 import {Track} from '../../models/Track';
 import useUser from '../../hooks/user';
+import useSettings from '../../hooks/settings';
+import {
+  useIsFavoriteTrack,
+  useLikeOrUnlikeTrack,
+} from '../../api/favoriteTracks';
 
 export type TrackListItemProps = {
   track: Track;
@@ -22,12 +26,14 @@ export type TrackListItemProps = {
 
 export default function TrackListItem({track}: TrackListItemProps) {
   const {offlineMode} = useUser();
-  const isFavorite = useIsFavoriteTrack(track.id);
   const status = useTrackStatus(track);
-  const likeOrUnlike = useLikeOrUnlikeTrack(track.id);
   const {playTrack, addTrackToQueue, pause, currentTrack, state} = usePlayer();
   const [menuVisible, setMenuVisible] = useState(false);
   const {addToDownloadQueue, isInDownloadQueue} = useDownloadQueue();
+  const {downloadDirectory} = useSettings();
+  const filepath = getTrackFilepath(downloadDirectory, track);
+  const isFavorite = useIsFavoriteTrack(track.id);
+  const likeOrUnlike = useLikeOrUnlikeTrack(track.id);
 
   const isPlaying = useMemo(
     () => currentTrack === track.id && state === 'playing',
@@ -35,10 +41,10 @@ export default function TrackListItem({track}: TrackListItemProps) {
   );
 
   const play = useCallback(() => {
-    if (status === 'downloaded' && !isPlaying) {
-      playTrack(track.id);
+    if (filepath && status === 'downloaded' && !isPlaying) {
+      playTrack(filepath);
     }
-  }, [playTrack, track.id, status, isPlaying]);
+  }, [playTrack, filepath, status, isPlaying]);
 
   const addToQueue = useCallback(() => {
     if (status === 'downloaded' && !isPlaying) {
@@ -112,7 +118,7 @@ export default function TrackListItem({track}: TrackListItemProps) {
                   {...props}
                   icon={isFavorite ? 'heart' : 'heart-outline'}
                   size={26}
-                  onPress={likeOrUnlike}
+                  onPress={likeOrUnlike.mutateAsync}
                 />
               )}
             </View>

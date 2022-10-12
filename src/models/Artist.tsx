@@ -8,7 +8,7 @@ export type Artist = {
 
 export function mapArtist(raw: any): Artist {
   return {
-    id: raw.id,
+    id: raw.id.toString(),
     name: raw?.name,
     imageSmallUrl: raw?.picture_small,
     imageMediumUrl: raw?.picture_medium,

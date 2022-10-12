@@ -1,6 +1,6 @@
 import {useCallback, useMemo} from 'react';
-import {useQuery, useQueryClient} from 'react-query';
-import axios from 'axios';
+import {useMutation, useQuery, useQueryClient} from 'react-query';
+import axios, {Method} from 'axios';
 import {CookieJar, Cookie} from 'tough-cookie';
 import useUser from './user';
 import useCookie from './cookie';
@@ -21,6 +21,47 @@ declare module 'axios' {
   }
 }
 
+export function useDeezerMutation<Return, Args>(
+  method: Method,
+  path: string,
+  config: (args: Args) => {
+    data?: {[key: string]: string | number | null};
+    params?: {[key: string]: string | number | null};
+    mapper?: (data: any) => Return;
+    onSuccess?: (data: Return | undefined) => void;
+  } = () => ({}),
+): {
+  mutate: (args: Args) => void;
+  mutateAsync: (args: Args) => Promise<Return | undefined>;
+  isLoading: boolean;
+  data: Return | undefined;
+} {
+  const {accessToken} = useUser();
+
+  const result = useMutation(
+    [method, path, accessToken],
+    async (args: Args): Promise<Return | undefined> => {
+      const {data, params, mapper, onSuccess} = config(args);
+
+      const response = await axios(`https://api.deezer.com/${path}`, {
+        method,
+        params: {
+          ...params,
+          access_token: accessToken,
+        },
+        data,
+      });
+
+      const resultData = mapper && response.data && mapper(response.data);
+      onSuccess && onSuccess(resultData);
+
+      return resultData;
+    },
+  );
+
+  return result;
+}
+
 export function useDeezerEntry<T>(
   path: string,
   mapper: (data: any) => T,
@@ -30,19 +71,19 @@ export function useDeezerEntry<T>(
 } {
   const {accessToken} = useUser();
 
-  const result = useQuery([path, accessToken], () =>
-    axios.get(`https://api.deezer.com/${path}`, {
+  const result = useQuery([path, accessToken], async () => {
+    const response = await axios.get(`https://api.deezer.com/${path}`, {
       params: {
         access_token: accessToken,
       },
-    }),
-  );
+    });
 
-  let data = result?.data?.data;
+    return mapper(response.data);
+  });
 
   return {
     ...result,
-    data: data ? mapper(data) : null,
+    data: result.data || null,
   };
 }
 
@@ -84,6 +125,10 @@ export function useDeezerList<T>(
         ...query,
       },
     });
+
+    if (path === 'search') {
+      console.log('LOLOLOLOLOLOLOLO', response?.data);
+    }
 
     const data = response?.data?.data;
     return {

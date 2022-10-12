@@ -18,6 +18,10 @@ import style from '../constants/style';
 import ArtistsList from '../components/molecules/ArtistsList';
 import PlaylistsList from '../components/molecules/PlaylistsList';
 import AlbumsList from '../components/molecules/AlbumsList';
+import {
+  useIsFavoriteArtist,
+  useLikeOrUnlikeArtist,
+} from '../api/favoriteArtists';
 
 export default function ArtistScreen() {
   const theme = useTheme();
@@ -34,6 +38,8 @@ export default function ArtistScreen() {
   const {data: playlists, isLoading: isLoadingPlaylists} = useArtistPlaylists(
     route.params.id,
   );
+  const isFavorite = useIsFavoriteArtist(route.params.id);
+  const likeOrUnlike = useLikeOrUnlikeArtist(route.params.id);
 
   const containerStyle = {
     backgroundColor: theme.colors.background,
@@ -57,6 +63,8 @@ export default function ArtistScreen() {
             <EntryHeader
               title={artist.name}
               imageUrl={artist.imageLargeUrl}
+              isFavorite={isFavorite}
+              likeOrUnlike={likeOrUnlike.mutateAsync}
               onListen={() => {}}
             />
             <View style={styles.container}>

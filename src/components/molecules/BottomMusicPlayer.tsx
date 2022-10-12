@@ -7,9 +7,15 @@ import {
   TouchableRipple,
   useTheme,
 } from 'react-native-paper';
+import {
+  useIsFavoriteTrack,
+  useLikeOrUnlikeTrack,
+} from '../../api/favoriteTracks';
+import {useTrackFromLabels} from '../../api/track';
 import useMusicPlayer from '../../hooks/musicPlayer';
 import usePlayer, {usePlayerProgress} from '../../hooks/player';
 import {useStoredTrack} from '../../hooks/trackStorage';
+import useUser from '../../hooks/user';
 
 export default function BottomMusicPlayer() {
   const theme = useTheme();
@@ -17,6 +23,13 @@ export default function BottomMusicPlayer() {
   const {progress} = usePlayerProgress();
   const track = useStoredTrack(currentTrack);
   const {showMusicPlayer} = useMusicPlayer();
+
+  const {offlineMode} = useUser();
+  const {data: onlineTrack} = useTrackFromLabels(track);
+  const isFavorite = useIsFavoriteTrack(onlineTrack?.id);
+  const likeOrUnlike = useLikeOrUnlikeTrack(onlineTrack?.id);
+
+  console.log('onlineTrack', track, onlineTrack);
 
   if (state === 'stopped') {
     return <></>;
@@ -42,7 +55,13 @@ export default function BottomMusicPlayer() {
                 <Paragraph>{track.title}</Paragraph>
                 <Caption>{track.artist}</Caption>
               </View>
-              <IconButton icon="heart" size={26} onPress={() => {}} />
+              {!offlineMode && onlineTrack && (
+                <IconButton
+                  icon={isFavorite ? 'heart' : 'heart-outline'}
+                  size={26}
+                  onPress={likeOrUnlike.mutateAsync}
+                />
+              )}
             </>
           )}
           {nextTrack && (

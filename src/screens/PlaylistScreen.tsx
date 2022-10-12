@@ -7,12 +7,18 @@ import {usePlaylist} from '../api/playlist';
 import EntryHeader from '../components/molecules/EntryHeader';
 import {MusicParamList} from './MusicScreen';
 import TrackListItem from '../components/molecules/TrackListItem';
+import {
+  useIsFavoritePlaylist,
+  useLikeOrUnlikePlaylist,
+} from '../api/favoritePlaylists';
 import style from '../constants/style';
 
 export default function PlaylistScreen() {
   const theme = useTheme();
   const route = useRoute<RouteProp<MusicParamList, 'Playlist'>>();
   const {data: playlist, isLoading} = usePlaylist(route.params.id);
+  const isFavorite = useIsFavoritePlaylist(route.params.id);
+  const likeOrUnlike = useLikeOrUnlikePlaylist(route.params.id);
 
   const containerStyle = {
     backgroundColor: theme.colors.background,
@@ -29,6 +35,8 @@ export default function PlaylistScreen() {
             <EntryHeader
               title={playlist.title}
               imageUrl={playlist.imageLargeUrl}
+              isFavorite={isFavorite}
+              likeOrUnlike={likeOrUnlike.mutateAsync}
               onListen={() => {}}
             />
             <View style={styles.container}>

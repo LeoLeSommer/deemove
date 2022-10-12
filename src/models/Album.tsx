@@ -12,7 +12,7 @@ export type Album = {
 
 export function mapAlbum(raw: any): Album {
   return {
-    id: raw.id,
+    id: raw.id.toString(),
     name: raw?.title,
     artistName: raw?.artist?.name,
     imageSmallUrl: raw?.cover_small,

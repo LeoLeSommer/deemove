@@ -13,12 +13,13 @@ import DraggableFlatList, {
 } from 'react-native-draggable-flatlist';
 import {useNavigation} from '@react-navigation/native';
 import locales from '../locales';
-import useDownloadQueue, {DownloadQueueElem} from '../hooks/downloadQueue';
+import useDownloadQueue from '../hooks/downloadQueue';
+import {DownloadQueueElem} from '../hooks/trackStorage';
 import {useTrack} from '../api/track';
 
 export default function DownloadQueueScreen() {
   const theme = useTheme();
-  const {downloadQueue, setDownloadQueue} = useDownloadQueue();
+  const {downloadQueue} = useDownloadQueue();
   const {canGoBack, goBack} = useNavigation();
 
   const containerStyle = {
@@ -36,7 +37,7 @@ export default function DownloadQueueScreen() {
       </Appbar.Header>
       <DraggableFlatList
         data={downloadQueue}
-        onDragEnd={({data}) => setDownloadQueue(data)}
+        onDragEnd={({}) => {}}
         keyExtractor={item => item.trackId}
         renderItem={props => <DownloadQueueItem {...props} />}
       />

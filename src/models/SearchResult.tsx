@@ -10,7 +10,7 @@ export type SearchResult = {
 
 export function mapSearchResult(raw: any): SearchResult {
   return {
-    id: raw.id,
+    id: raw.id.toString(),
     title: raw?.title || raw?.name,
     subtitle: raw?.artist?.name,
     type: raw.type,

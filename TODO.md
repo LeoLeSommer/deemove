@@ -6,8 +6,8 @@
 - [x] Add artwork for downloaded artist and albums
 - [x] Add a play page
 - [x] Offline mode
-- [ ] Like/unlike entries
-- [ ] Fix the settings to choose the download directory
+- [x] Fix the settings to choose the download directory
+- [x] Like/unlike entries
 - [ ] Add a music queue system
 - [ ] Add a way to remove downloaded tracks
 - [ ] Renew token when needed

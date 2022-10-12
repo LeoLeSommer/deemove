@@ -2,22 +2,16 @@ import React, {
   createContext,
   useContext,
   ReactNode,
-  useState,
   useCallback,
   useEffect,
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useDownloadTrack} from '../api/download';
 import useUser from './user';
-
-export type DownloadQueueElem = {
-  trackId: string;
-  status: 'downloading' | 'pending';
-};
+import useTrackStorage, {DownloadQueueElem} from './trackStorage';
 
 export type DownloadQueueContext = {
   downloadQueue: DownloadQueueElem[];
-  setDownloadQueue: (value: DownloadQueueElem[]) => void;
   addToDownloadQueue: (trackId: string) => void;
   removeFromDownloadQueue: (trackId: string) => void;
   isInDownloadQueue: (trackId: string) => boolean;
@@ -34,24 +28,21 @@ const maximumParallelDownload = 2;
 
 export function DownloadQueueProvider({children}: DownloadQueueProviderProps) {
   const {isLogged} = useUser();
-  const [downloadQueue, setDownloadQueue] = useState<DownloadQueueElem[]>([]);
   const downloadTrack = useDownloadTrack();
+  const {downloadQueue, dispatch} = useTrackStorage();
 
   // Persists download queue
   useEffect(() => {
     AsyncStorage.getItem('@download_queue').then(value => {
       if (value) {
         const stored = JSON.parse(value) || [];
-
-        setDownloadQueue(
-          stored.map((elem: any) => ({
-            trackId: elem.trackId,
-            status: 'pending',
-          })),
-        );
+        dispatch({
+          type: 'DOWNLOAD_QUEUE_LOADED',
+          trackIds: stored.map((elem: any) => elem.trackId),
+        });
       }
     });
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     AsyncStorage.setItem('@download_queue', JSON.stringify(downloadQueue));
@@ -59,20 +50,22 @@ export function DownloadQueueProvider({children}: DownloadQueueProviderProps) {
 
   const addToDownloadQueue = useCallback(
     (trackId: string) => {
-      setDownloadQueue([...downloadQueue, {trackId, status: 'pending'}]);
+      dispatch({
+        type: 'DOWNLOAD_REQUESTED',
+        trackId,
+      });
     },
-    [downloadQueue],
+    [dispatch],
   );
 
   const removeFromDownloadQueue = useCallback(
     (trackId: string) => {
-      setDownloadQueue(
-        downloadQueue.filter(
-          elem => !(elem.trackId === trackId && elem.status === 'pending'),
-        ),
-      );
+      dispatch({
+        type: 'DOWNLOAD_REQUEST_REMOVED',
+        trackId,
+      });
     },
-    [downloadQueue],
+    [dispatch],
   );
 
   const isInDownloadQueue = useCallback(
@@ -108,22 +101,13 @@ export function DownloadQueueProvider({children}: DownloadQueueProviderProps) {
 
     // Update the status in the download queue
     const trackId = downloadQueue[elemToDownloadIndex].trackId;
-    const newDownloadQueue = [...downloadQueue];
-    newDownloadQueue[elemToDownloadIndex] = {
-      ...newDownloadQueue[elemToDownloadIndex],
-      status: 'downloading',
-    };
-    setDownloadQueue(newDownloadQueue);
 
     // Launch the download process
-    downloadTrack(trackId).then(() => {
-      removeFromDownloadQueue(trackId);
-    });
+    downloadTrack(trackId);
   }, [isLogged, downloadQueue, downloadTrack, removeFromDownloadQueue]);
 
   const result = {
     downloadQueue,
-    setDownloadQueue,
     addToDownloadQueue,
     removeFromDownloadQueue,
     isInDownloadQueue,

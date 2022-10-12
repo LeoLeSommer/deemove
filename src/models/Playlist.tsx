@@ -11,7 +11,7 @@ export type Playlist = {
 
 export function mapPlaylist(raw: any): Playlist {
   return {
-    id: raw.id,
+    id: raw.id.toString(),
     title: raw?.title,
     imageSmallUrl: raw?.picture_small,
     imageMediumUrl: raw?.picture_medium,

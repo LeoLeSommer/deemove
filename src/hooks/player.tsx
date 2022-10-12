@@ -22,8 +22,8 @@ import useTrackStorage from './trackStorage';
 export type PlayerState = 'stopped' | 'playing' | 'paused';
 
 export type PlayerContext = {
-  playTrack: (trackId: string) => Promise<void>;
-  addTrackToQueue: (trackId: string) => Promise<void>;
+  playTrack: (path: string) => Promise<void>;
+  addTrackToQueue: (path: string) => Promise<void>;
   play: () => Promise<void>;
   pause: () => Promise<void>;
   stop: () => Promise<void>;
@@ -41,7 +41,7 @@ export type PlayerProviderProps = {
 };
 
 export function PlayerProvider({children}: PlayerProviderProps) {
-  const {trackStorage} = useTrackStorage();
+  const {tracks} = useTrackStorage();
   const [currentTrack, setCurrentTrack] = useState<string | null>(null);
   const [nextTrack, setNextTrack] = useState<string | null>(null);
   const [previousTrack, setPreviousTrack] = useState<string | null>(null);
@@ -127,42 +127,42 @@ export function PlayerProvider({children}: PlayerProviderProps) {
   });
 
   const playTrack = useCallback(
-    async (trackId: string) => {
-      const track = trackStorage[trackId]?.track;
+    async (path: string) => {
+      const track = tracks[path]?.track;
 
       if (track) {
         await TrackPlayer.reset();
         await TrackPlayer.add({
-          id: trackId,
-          url: track.path,
+          id: path,
+          url: path,
           title: track.title,
           artist: track.artist,
           album: track.album,
         });
         await TrackPlayer.play();
 
-        setCurrentTrack(trackId);
+        setCurrentTrack(path);
         setNextTrack(null);
       }
     },
-    [trackStorage],
+    [tracks],
   );
 
   const addTrackToQueue = useCallback(
-    async (trackId: string) => {
-      const track = trackStorage[trackId]?.track;
+    async (path: string) => {
+      const track = tracks[path]?.track;
 
       if (track) {
         await TrackPlayer.add({
-          id: trackId,
-          url: track.path,
+          id: path,
+          url: path,
           title: track.title,
           artist: track.artist,
           album: track.album,
         });
       }
     },
-    [trackStorage],
+    [tracks],
   );
 
   const play = useCallback(async () => {

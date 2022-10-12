@@ -8,16 +8,6 @@ export function useFavoriteTracks(limit?: number) {
   return useDeezerList('user/me/tracks', mapTrack, limit);
 }
 
-export function useFavoriteTrackIds() {
-  /*return useDeezerOldApiEntry('song.getFavoriteIds', {
-    nb: 100000,
-    start: 0,
-    checksum: null,
-  });*/
-
-  return [];
-}
-
 export function useFavoriteAlbums(limit?: number) {
   return useDeezerList('user/me/albums', mapAlbum, limit);
 }

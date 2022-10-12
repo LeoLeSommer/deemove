@@ -10,6 +10,8 @@ export type EntryHeaderProps = {
   title: string;
   subtitle?: string;
   imageUrl: string;
+  isFavorite?: boolean;
+  likeOrUnlike?: () => Promise<void>;
   onListen: () => void;
 };
 
@@ -17,6 +19,8 @@ export default function EntryHeader({
   title,
   subtitle,
   imageUrl,
+  isFavorite,
+  likeOrUnlike,
   onListen,
 }: EntryHeaderProps) {
   const {canGoBack, goBack} = useNavigation();
@@ -36,12 +40,14 @@ export default function EntryHeader({
           {locales.common.listen}
         </Button>
       </View>
-      <IconButton
-        icon="heart-outline"
-        mode="contained"
-        onPress={() => {}}
-        style={styles.likeButton}
-      />
+      {likeOrUnlike && (
+        <IconButton
+          icon={isFavorite ? 'heart' : 'heart-outline'}
+          mode="contained"
+          onPress={likeOrUnlike}
+          style={styles.likeButton}
+        />
+      )}
       {canGoBack() && (
         <IconButton
           icon="arrow-left"

@@ -79,6 +79,7 @@ export function useDownloadTrack() {
         // Notify that we started to download
         dispatch({
           type: 'DOWNLOAD_START',
+          trackId,
           filepath,
         });
 
@@ -91,7 +92,7 @@ export function useDownloadTrack() {
         // Download the track
         const tempFilepath = filepath + 'temp';
         await deleteIfExists(tempFilepath);
-        await downloadTrack(tempFilepath, downloadInfos, dispatch);
+        await downloadTrack(trackId, tempFilepath, downloadInfos, dispatch);
 
         // Decrypt the track
         await deleteIfExists(filepath);
@@ -108,6 +109,7 @@ export function useDownloadTrack() {
         // Notify that we finished to download
         dispatch({
           type: 'DOWNLOAD_END',
+          trackId,
           filepath,
           track: {
             ...downloadInfos,
@@ -118,6 +120,7 @@ export function useDownloadTrack() {
       } catch (err) {
         dispatch({
           type: 'DOWNLOAD_ERR',
+          trackId,
           filepath,
         });
       }
@@ -144,6 +147,7 @@ function getTrackDownloadInfos(
 }
 
 async function downloadTrack(
+  trackId: string,
   filepath: string,
   downloadInfos: TrackDownloadInfos,
   dispatch: React.Dispatch<TrackStorageAction>,
@@ -155,6 +159,7 @@ async function downloadTrack(
     .progress((received, total) => {
       dispatch({
         type: 'DOWNLOAD_PENDING',
+        trackId,
         filepath,
         progress: received / total,
       });
@@ -265,12 +270,14 @@ async function initializeDirectory(
   },
   coverUrl: string,
 ) {
+  console.log('1', directoryPath);
   const coverPath = path.join(directoryPath, 'cover.jpg');
 
   if (!(await RNFetchBlob.fs.exists(directoryPath))) {
     await RNFetchBlob.fs.mkdir(path.dirname(coverPath));
   }
 
+  console.log('2', coverPath);
   if (!(await RNFetchBlob.fs.exists(coverPath))) {
     await RNFetchBlob.config({
       path: coverPath,
@@ -284,15 +291,14 @@ async function writeMetadatas(
   downloadDirectory: string,
 ) {
   const metadatas = {
-    TIT2: `${downloadInfos.title} ${downloadInfos.version || ''}`.trim(),
-    TALB: downloadInfos.title,
+    TIT2: downloadInfos.title,
+    TALB: downloadInfos.album,
     TPE1: downloadInfos.artists,
     TPE2: downloadInfos.artist,
     TCOM: downloadInfos.contributors,
     TPOS: downloadInfos.diskNumber,
     TRCK: downloadInfos.trackNumber,
     TYER: downloadInfos.releaseDate.toString(),
-    TPUB: downloadInfos.album,
   };
 
   const writer = new ID3Writer(content);
