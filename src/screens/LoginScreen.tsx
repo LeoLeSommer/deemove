@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     justifyContent: 'space-between',
     alignItems: 'stretch',
-    padding: style.margeLarge,
+    margin: style.margeLarge,
   },
   headerContainer: {
     display: 'flex',

@@ -38,14 +38,17 @@ export function DownloadQueueProvider({children}: DownloadQueueProviderProps) {
         const stored = JSON.parse(value) || [];
         dispatch({
           type: 'DOWNLOAD_QUEUE_LOADED',
-          trackIds: stored.map((elem: any) => elem.trackId),
+          trackIds: stored,
         });
       }
     });
   }, [dispatch]);
 
   useEffect(() => {
-    AsyncStorage.setItem('@download_queue', JSON.stringify(downloadQueue));
+    AsyncStorage.setItem(
+      '@download_queue',
+      JSON.stringify(downloadQueue.map(elem => elem.trackId)),
+    );
   }, [downloadQueue]);
 
   const addToDownloadQueue = useCallback(

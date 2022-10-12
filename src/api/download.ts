@@ -3,6 +3,7 @@ import path from 'path-browserify';
 import RNFetchBlob from 'react-native-blob-util';
 import {Cookie} from 'tough-cookie';
 import {Buffer} from 'buffer';
+// @ts-ignore
 import ID3Writer from 'browser-id3-writer';
 import {
   mapTrackDownloadInfos,
@@ -195,8 +196,8 @@ async function decryptTrack(
 
       // Write metadatas
       writeMetadatas(content, downloadInfos, downloadDirectory).then(
-        content => {
-          write.write(content.toString(fileFormat)).then(() => {
+        metadataContent => {
+          write.write(metadataContent.toString(fileFormat)).then(() => {
             resolve(undefined);
           });
         },
@@ -270,14 +271,12 @@ async function initializeDirectory(
   },
   coverUrl: string,
 ) {
-  console.log('1', directoryPath);
   const coverPath = path.join(directoryPath, 'cover.jpg');
 
   if (!(await RNFetchBlob.fs.exists(directoryPath))) {
     await RNFetchBlob.fs.mkdir(path.dirname(coverPath));
   }
 
-  console.log('2', coverPath);
   if (!(await RNFetchBlob.fs.exists(coverPath))) {
     await RNFetchBlob.config({
       path: coverPath,

@@ -8,6 +8,7 @@ import {
   useTheme,
 } from 'react-native-paper';
 import {SvgUri} from 'react-native-svg';
+// @ts-ignore
 import AnimatedLinearGradient from 'react-native-animated-linear-gradient';
 import mix from 'mix-css-color';
 import Slider from '../components/input/Slider';
@@ -75,7 +76,7 @@ export default function MusicPlayerScreen() {
               <IconButton
                 icon={isFavorite ? 'heart' : 'heart-outline'}
                 size={26}
-                onPress={likeOrUnlike.mutateAsync}
+                onPress={() => likeOrUnlike.mutateAsync}
               />
             )}
           </View>

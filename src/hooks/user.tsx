@@ -71,6 +71,8 @@ export function UserProvider({children}: UserProviderProps) {
   );
 
   const logout = useCallback(async () => {
+    await AsyncStorage.removeItem('@auth_tokens');
+
     setAccessToken(null);
     setOfflineMode(false);
   }, []);

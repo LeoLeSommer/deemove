@@ -19,6 +19,7 @@ import {
   useIsFavoriteTrack,
   useLikeOrUnlikeTrack,
 } from '../../api/favoriteTracks';
+import useTrackStorage from '../../hooks/trackStorage';
 
 export type TrackListItemProps = {
   track: Track;
@@ -34,6 +35,7 @@ export default function TrackListItem({track}: TrackListItemProps) {
   const filepath = getTrackFilepath(downloadDirectory, track);
   const isFavorite = useIsFavoriteTrack(track.id);
   const likeOrUnlike = useLikeOrUnlikeTrack(track.id);
+  const {deleteTrack} = useTrackStorage();
 
   const isPlaying = useMemo(
     () => currentTrack === track.id && state === 'playing',
@@ -118,7 +120,7 @@ export default function TrackListItem({track}: TrackListItemProps) {
                   {...props}
                   icon={isFavorite ? 'heart' : 'heart-outline'}
                   size={26}
-                  onPress={likeOrUnlike.mutateAsync}
+                  onPress={() => likeOrUnlike.mutateAsync}
                 />
               )}
             </View>
@@ -126,7 +128,13 @@ export default function TrackListItem({track}: TrackListItemProps) {
         />
       }>
       <Menu.Item onPress={addToQueue} title={locales.track.addToTrackQueue} />
-      <Menu.Item onPress={() => {}} title={locales.track.deleteTrack} />
+      <Menu.Item
+        onPress={() => {
+          setMenuVisible(false);
+          return deleteTrack(track);
+        }}
+        title={locales.track.deleteTrack}
+      />
     </Menu>
   );
 }

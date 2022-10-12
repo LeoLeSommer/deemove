@@ -5,6 +5,8 @@ import {
   MD3DarkTheme,
   MD3LightTheme,
   Provider,
+  Snackbar,
+  Text,
 } from 'react-native-paper';
 import {View} from 'react-native';
 import {QueryClient, QueryClientProvider} from 'react-query';
@@ -17,27 +19,30 @@ import {PlayerProvider} from './hooks/player';
 import useSettings, {SettingsProvider} from './hooks/settings';
 import {DownloadQueueProvider} from './hooks/downloadQueue';
 import {MusicPlayerProvider} from './hooks/musicPlayer';
+import useError, {ErrorProvider} from './hooks/error';
 
 const queryClient = new QueryClient();
 
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <SettingsProvider>
-        <CookieProvider>
-          <UserProvider>
-            <TrackStorageProvider>
-              <PlayerProvider>
-                <DownloadQueueProvider>
-                  <MusicPlayerProvider>
-                    <StyleContainer />
-                  </MusicPlayerProvider>
-                </DownloadQueueProvider>
-              </PlayerProvider>
-            </TrackStorageProvider>
-          </UserProvider>
-        </CookieProvider>
-      </SettingsProvider>
+      <ErrorProvider>
+        <SettingsProvider>
+          <CookieProvider>
+            <UserProvider>
+              <TrackStorageProvider>
+                <PlayerProvider>
+                  <DownloadQueueProvider>
+                    <MusicPlayerProvider>
+                      <StyleContainer />
+                    </MusicPlayerProvider>
+                  </DownloadQueueProvider>
+                </PlayerProvider>
+              </TrackStorageProvider>
+            </UserProvider>
+          </CookieProvider>
+        </SettingsProvider>
+      </ErrorProvider>
     </QueryClientProvider>
   );
 }
@@ -62,6 +67,7 @@ function StyleContainer() {
 function Container() {
   const theme = useTheme();
   const {displayLogin} = useUser();
+  const {currentError, popError} = useError();
 
   const containerStyle = {
     backgroundColor: theme.colors.background,
@@ -69,9 +75,23 @@ function Container() {
     height: '100%',
   };
 
+  const snackbarStyle = {
+    backgroundColor: theme.colors.errorContainer,
+  };
+
+  const snackbarTextStyle = {
+    color: theme.colors.error,
+  };
+
   return (
     <View style={containerStyle}>
       {displayLogin ? <LoginScreen /> : <MainTabsScreen />}
+      <Snackbar
+        visible={!!currentError}
+        onDismiss={popError}
+        style={snackbarStyle}>
+        <Text style={snackbarTextStyle}>{currentError}</Text>
+      </Snackbar>
     </View>
   );
 }

@@ -37,6 +37,7 @@ export default function SearchResultListItem({
       track={{
         ...item,
         artist: item.subtitle || '',
+        album: '',
         duration: 0,
       }}
     />

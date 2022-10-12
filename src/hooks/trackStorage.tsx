@@ -4,9 +4,12 @@ import React, {
   useReducer,
   useContext,
   useEffect,
+  useCallback,
 } from 'react';
-import path from 'path-browserify';
+import pathBrowserify from 'path-browserify';
+// @ts-ignore
 import MediaMeta from 'react-native-media-meta';
+import RNFetchBlob from 'react-native-blob-util';
 import {match} from 'ts-pattern';
 import {uniqBy} from 'lodash';
 import {LocalTrack} from '../models/LocalTrack';
@@ -18,6 +21,7 @@ import {Album} from '../models/Album';
 import useSettings from './settings';
 import {recursiveLs} from '../utils/file';
 import {upsert} from '../utils/array';
+import {getTrackFilepath} from '../api/download';
 
 export type DownloadQueueElem = {
   trackId: string;
@@ -63,6 +67,10 @@ export type TrackStorageAction =
       album: LocalAlbum;
     }
   | {
+      type: 'STORED_TRACK_DELETED';
+      filepath: string;
+    }
+  | {
       type: 'DOWNLOAD_START';
       trackId: string;
       filepath: string;
@@ -99,18 +107,17 @@ export type TrackStorageAction =
 
 export type TrackStorageContext = TrackStorageState & {
   dispatch: React.Dispatch<TrackStorageAction>;
+  deleteTrack: (track: {
+    title: string;
+    album: string;
+    artist: string;
+  }) => Promise<void>;
 };
 
 const TrackStorageContext = createContext<TrackStorageContext>({} as any);
 
 export type TrackStorageProviderProps = {
   children: ReactNode;
-};
-
-type Tags = {
-  title?: string;
-  artist?: string;
-  album?: string;
 };
 
 export function TrackStorageProvider({children}: TrackStorageProviderProps) {
@@ -154,6 +161,15 @@ export function TrackStorageProvider({children}: TrackStorageProviderProps) {
           ...state,
           albums: Object.assign(state.albums, {
             [elem.album.path]: elem.album,
+          }),
+        }))
+        .with({type: 'STORED_TRACK_DELETED'}, elem => ({
+          ...state,
+          tracks: Object.assign({}, state.tracks, {
+            [elem.filepath]: {
+              ...state.tracks[elem.filepath],
+              alreadyDownloaded: false,
+            },
           }),
         }))
         .with({type: 'DOWNLOAD_START'}, elem => ({
@@ -210,10 +226,10 @@ export function TrackStorageProvider({children}: TrackStorageProviderProps) {
               downloadProgress: 1,
               track: elem.track,
             },
-            downloadQueue: state.downloadQueue.filter(
-              queueItem => elem.trackId !== queueItem.trackId,
-            ),
           }),
+          downloadQueue: state.downloadQueue.filter(
+            queueItem => elem.trackId !== queueItem.trackId,
+          ),
         }))
         .with({type: 'DOWNLOAD_REQUESTED'}, elem => ({
           ...state,
@@ -256,7 +272,7 @@ export function TrackStorageProvider({children}: TrackStorageProviderProps) {
       }
 
       const filepaths = (await recursiveLs(downloadDirectory)).filter(
-        filepath => path.extname(filepath) === '.mp3',
+        filepath => pathBrowserify.extname(filepath) === '.mp3',
       );
 
       const tracks = (
@@ -274,7 +290,10 @@ export function TrackStorageProvider({children}: TrackStorageProviderProps) {
               artist: tags.artist,
               album: tags.album,
               path: filepath,
-              coverPath: path.join(path.dirname(filepath), 'cover.jpg'),
+              coverPath: pathBrowserify.join(
+                pathBrowserify.dirname(filepath),
+                'cover.jpg',
+              ),
             } as LocalTrack;
 
             if (!tags.title || !tags.artist || !tags.album) {
@@ -306,8 +325,11 @@ export function TrackStorageProvider({children}: TrackStorageProviderProps) {
             ({
               name: track.album,
               artist: track.artist,
-              path: path.dirname(track.path),
-              coverPath: path.join(path.dirname(track.path), 'cover.jpg'),
+              path: pathBrowserify.dirname(track.path),
+              coverPath: pathBrowserify.join(
+                pathBrowserify.dirname(track.path),
+                'cover.jpg',
+              ),
             } as LocalAlbum),
         ),
         track => track.path,
@@ -328,8 +350,11 @@ export function TrackStorageProvider({children}: TrackStorageProviderProps) {
             ({
               name: track.album,
               artist: track.artist,
-              path: path.dirname(track.path),
-              coverPath: path.join(path.dirname(track.path), 'cover.jpg'),
+              path: pathBrowserify.dirname(track.path),
+              coverPath: pathBrowserify.join(
+                pathBrowserify.dirname(track.path),
+                'cover.jpg',
+              ),
             } as LocalArtist),
         ),
         track => track.path,
@@ -348,9 +373,25 @@ export function TrackStorageProvider({children}: TrackStorageProviderProps) {
     fetchData();
   }, [downloadDirectory]);
 
+  const deleteTrack = useCallback(
+    async (track: {title: string; album: string; artist: string}) => {
+      const filepath = getTrackFilepath(downloadDirectory, track);
+
+      if (filepath) {
+        await RNFetchBlob.fs.unlink(filepath);
+        dispatch({
+          type: 'STORED_TRACK_DELETED',
+          filepath,
+        });
+      }
+    },
+    [downloadDirectory],
+  );
+
   const result = {
     ...trackStorage,
     dispatch,
+    deleteTrack,
   };
 
   return (

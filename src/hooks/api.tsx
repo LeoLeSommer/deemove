@@ -1,9 +1,10 @@
 import {useCallback, useMemo} from 'react';
 import {useMutation, useQuery, useQueryClient} from 'react-query';
-import axios, {Method} from 'axios';
+import axios, {AxiosResponse, Method} from 'axios';
 import {CookieJar, Cookie} from 'tough-cookie';
 import useUser from './user';
 import useCookie from './cookie';
+import {DeezerApiError} from '../models/DeezerApiError';
 
 export const CLIENT_ID = '172365';
 export const CLIENT_SECRET = 'fb0bec7ccc063dab0417eb7b0d847f34';
@@ -126,10 +127,6 @@ export function useDeezerList<T>(
       },
     });
 
-    if (path === 'search') {
-      console.log('LOLOLOLOLOLOLOLO', response?.data);
-    }
-
     const data = response?.data?.data;
     return {
       data: data ? data.map(mapper) : [],
@@ -232,4 +229,14 @@ export async function getDeezerOldApiEntry<T>(
 
   let data = response.data.results;
   return mapper(data);
+}
+
+export function throwDeezerErrorIfNeeded(
+  deezerResponse: AxiosResponse,
+  overwriteCode?: string,
+) {
+  const error = deezerResponse?.data?.error;
+  if (error) {
+    throw new DeezerApiError(error.message, overwriteCode || error.type);
+  }
 }

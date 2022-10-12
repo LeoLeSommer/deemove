@@ -62,4 +62,10 @@ export default {
     quitOfflineMode: 'Quitter le mode offline',
     copyTokenToClipboard: "Copier le jeton d'accès dans le presse papier",
   },
+  errors: {
+    LOGIN_FAILED:
+      "Nous n'avons pas pu vous connecter, veuillez vérifier vos identifiants",
+    INCORRECT_REGION:
+      "Nous n'avons pas pu vous connecter, vous essayez surement d'accéder à Deezer depuis une région non couverte par l'offre gratuite",
+  },
 };

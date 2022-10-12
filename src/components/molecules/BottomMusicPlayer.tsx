@@ -29,8 +29,6 @@ export default function BottomMusicPlayer() {
   const isFavorite = useIsFavoriteTrack(onlineTrack?.id);
   const likeOrUnlike = useLikeOrUnlikeTrack(onlineTrack?.id);
 
-  console.log('onlineTrack', track, onlineTrack);
-
   if (state === 'stopped') {
     return <></>;
   }
@@ -59,7 +57,7 @@ export default function BottomMusicPlayer() {
                 <IconButton
                   icon={isFavorite ? 'heart' : 'heart-outline'}
                   size={26}
-                  onPress={likeOrUnlike.mutateAsync}
+                  onPress={() => likeOrUnlike.mutateAsync}
                 />
               )}
             </>

@@ -44,7 +44,7 @@ export function PlayerProvider({children}: PlayerProviderProps) {
   const {tracks} = useTrackStorage();
   const [currentTrack, setCurrentTrack] = useState<string | null>(null);
   const [nextTrack, setNextTrack] = useState<string | null>(null);
-  const [previousTrack, setPreviousTrack] = useState<string | null>(null);
+  const [previousTrack /*, setPreviousTrack*/] = useState<string | null>(null);
   const [state, setState] = useState<PlayerState>('stopped');
 
   // Initialize
@@ -69,6 +69,7 @@ export function PlayerProvider({children}: PlayerProviderProps) {
   });
 
   if (Platform.OS === 'android') {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     useTrackPlayerEvents([Event.RemoteSkip], (event: RemoteSkipEvent) => {
       TrackPlayer.skip(event.index);
     });

@@ -2,57 +2,78 @@ import {useCallback} from 'react';
 import axios from 'axios';
 import {Cookie} from 'tough-cookie';
 import useCookie from '../hooks/cookie';
-import {CLIENT_ID, CLIENT_SECRET, httpHeaders} from '../hooks/api';
+import {
+  CLIENT_ID,
+  CLIENT_SECRET,
+  httpHeaders,
+  throwDeezerErrorIfNeeded,
+} from '../hooks/api';
+import useError from '../hooks/error';
 import {md5Encrypt} from '../utils/crypto';
+import {DeezerApiError} from '../models/DeezerApiError';
 
 export function useLogin() {
   const {setCookie} = useCookie();
+  const {pushError} = useError();
 
   return useCallback(
     async (email: string, password: string) => {
-      password = md5Encrypt(password);
-      const hash = md5Encrypt(
-        [CLIENT_ID, email, password, CLIENT_SECRET].join(''),
-      );
+      try {
+        password = md5Encrypt(password);
+        const hash = md5Encrypt(
+          [CLIENT_ID, email, password, CLIENT_SECRET].join(''),
+        );
 
-      let response = await axios.get('https://api.deezer.com/auth/token', {
-        params: {
-          app_id: CLIENT_ID,
-          login: email,
-          password,
-          hash,
-        },
-      });
+        let response = await axios.get('https://api.deezer.com/auth/token', {
+          params: {
+            app_id: CLIENT_ID,
+            login: email,
+            password,
+            hash,
+          },
+        });
 
-      const accessToken = response.data.access_token;
+        throwDeezerErrorIfNeeded(response, 'LOGIN_FAILED');
 
-      // Login for old API
-      const arl = await getArlFromAccessToken(accessToken);
+        const accessToken = response.data.access_token;
 
-      const oldApiAccessToken = await loginViaArl(arl, setCookie);
+        // Login for old API
+        const arl = await getArlFromAccessToken(accessToken);
 
-      return {
-        accessToken: accessToken as string,
-        oldApiAccessToken: oldApiAccessToken,
-      };
+        const oldApiAccessToken = await loginViaArl(arl, setCookie);
+
+        return {
+          accessToken: accessToken as string,
+          oldApiAccessToken: oldApiAccessToken,
+        };
+      } catch (err: any) {
+        pushError(err);
+        throw err;
+      }
     },
-    [setCookie],
+    [setCookie, pushError],
   );
 }
 
 async function getArlFromAccessToken(accessToken: string): Promise<string> {
-  await axios.get('https://api.deezer.com/platform/generic/track/3135556', {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
+  try {
+    await axios.get('https://api.deezer.com/platform/generic/track/3135556', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+  } catch (err: any) {
+    throw new DeezerApiError(err.message, 'INCORRECT_REGION');
+  }
 
+  console.log('response');
   let response = await axios.get(
     'https://www.deezer.com/ajax/gw-light.php?method=user.getArl&input=3&api_version=1.0&api_token=null',
     {
       headers: httpHeaders,
     },
   );
+  console.log(response);
 
   return response.data.results.trim();
 }

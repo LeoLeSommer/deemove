@@ -8,12 +8,15 @@
 - [x] Offline mode
 - [x] Fix the settings to choose the download directory
 - [x] Like/unlike entries
-- [ ] Add a music queue system
-- [ ] Add a way to remove downloaded tracks
+- [x] Add a music queue system
+- [x] Add a way to remove downloaded tracks
+- [ ] Add a way to select how many parallel download are allowed
+- [ ] Add a way to download an entire playlist/album/my favorites ...
+- [ ] Handle requests errors
 - [ ] Renew token when needed
+- [ ] Add a play queue system
 - [ ] Improve interface
 - [ ] Add translations at least for english
-- [ ] Handle requests errors
 - [ ] Bonus: offline playlist
 - [ ] Bonus: be able to stream encrypted musics
-- [ ] Bonus: send tracking informations to deezer to update the algorithm settings
+- [ ] Bonus: send tracking informations to deezer to update the algorithm settings (gw method=log.listen)
