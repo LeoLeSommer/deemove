@@ -13,6 +13,8 @@ export type SettingsContext = {
   setDarkMode: (value: boolean) => Promise<void>;
   downloadDirectory: string | null;
   setDownloadDirectory: (value: string) => Promise<void>;
+  simultaneousDownloads: number;
+  setSimultaneousDownloads: (value: number) => Promise<void>;
 };
 
 const SettingsContext = createContext<SettingsContext>({} as any);
@@ -26,6 +28,7 @@ export function SettingsProvider({children}: SettingsProviderProps) {
   const [downloadDirectory, setDownloadDirectoryInternal] = useState<
     string | null
   >('content://com.android.externalstorage.documents/tree/primary%3AMusic');
+  const [simultaneousDownloads, setSimultaneousDownloadsInternal] = useState(3);
 
   // Load dark mode from stored settings
   useEffect(() => {
@@ -55,11 +58,26 @@ export function SettingsProvider({children}: SettingsProviderProps) {
     await AsyncStorage.setItem('@download_directory', value);
   }, []);
 
+  // Load simultaneous downloads from stored settings
+  useEffect(() => {
+    AsyncStorage.getItem('@simultaneous_downloads').then(value => {
+      setSimultaneousDownloadsInternal((value && parseInt(value)) || 3);
+    });
+  }, []);
+
+  const setSimultaneousDownloads = useCallback(async (value: number) => {
+    setSimultaneousDownloadsInternal(value);
+
+    await AsyncStorage.setItem('@simultaneous_downloads', value.toString());
+  }, []);
+
   const result = {
     darkMode,
     setDarkMode,
     downloadDirectory,
     setDownloadDirectory,
+    simultaneousDownloads,
+    setSimultaneousDownloads,
   };
 
   return (

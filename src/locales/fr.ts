@@ -58,6 +58,7 @@ export default {
     downloadQueue: "File d'attente des téléchargement",
     darkMode: 'Mode sombre',
     downloadDirectory: 'Dossier de téléchargement',
+    simultaneousDownloads: 'Téléchargements simultanés',
     logout: 'Se déconnecter',
     quitOfflineMode: 'Quitter le mode offline',
     copyTokenToClipboard: "Copier le jeton d'accès dans le presse papier",

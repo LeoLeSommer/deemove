@@ -152,7 +152,6 @@ const styles = StyleSheet.create({
     padding: 20,
     width: '100%',
     height: '100%',
-    paddingHorizontal: 40,
   },
   backButton: {
     position: 'absolute',
@@ -160,6 +159,7 @@ const styles = StyleSheet.create({
   coverContainer: {
     alignItems: 'center',
     paddingTop: 40,
+    paddingHorizontal: 20,
   },
   cover: {
     flexDirection: 'row',
@@ -181,6 +181,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 20,
   },
   track: {
     fontWeight: 'bold',

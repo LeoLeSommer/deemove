@@ -9,6 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useDownloadTrack} from '../api/download';
 import useUser from './user';
 import useTrackStorage, {DownloadQueueElem} from './trackStorage';
+import useSettings from './settings';
 
 export type DownloadQueueContext = {
   downloadQueue: DownloadQueueElem[];
@@ -23,13 +24,11 @@ export type DownloadQueueProviderProps = {
   children: ReactNode;
 };
 
-// TODO: create a settings for that
-const maximumParallelDownload = 2;
-
 export function DownloadQueueProvider({children}: DownloadQueueProviderProps) {
   const {isLogged} = useUser();
   const downloadTrack = useDownloadTrack();
   const {downloadQueue, dispatch} = useTrackStorage();
+  const {simultaneousDownloads} = useSettings();
 
   // Persists download queue
   useEffect(() => {
@@ -87,7 +86,7 @@ export function DownloadQueueProvider({children}: DownloadQueueProviderProps) {
     // Check if we have remaining space for a download
     if (
       downloadQueue.filter(elem => elem.status === 'downloading').length >=
-      maximumParallelDownload
+      simultaneousDownloads
     ) {
       return;
     }
@@ -107,7 +106,13 @@ export function DownloadQueueProvider({children}: DownloadQueueProviderProps) {
 
     // Launch the download process
     downloadTrack(trackId);
-  }, [isLogged, downloadQueue, downloadTrack, removeFromDownloadQueue]);
+  }, [
+    isLogged,
+    downloadQueue,
+    simultaneousDownloads,
+    downloadTrack,
+    removeFromDownloadQueue,
+  ]);
 
   const result = {
     downloadQueue,

@@ -10,7 +10,7 @@
 - [x] Like/unlike entries
 - [x] Add a music queue system
 - [x] Add a way to remove downloaded tracks
-- [ ] Add a way to select how many parallel download are allowed
+- [x] Add a way to select how many parallel download are allowed
 - [ ] Add a way to download an entire playlist/album/my favorites ...
 - [ ] Handle requests errors
 - [ ] Renew token when needed
