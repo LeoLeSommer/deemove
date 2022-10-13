@@ -8,6 +8,7 @@ import React, {
 } from 'react';
 import locales from '../locales';
 import {DeezerApiError} from '../models/DeezerApiError';
+import {ENVIRONMENT} from '../utils/config';
 
 export type ErrorContext = {
   currentError: string | null;
@@ -45,7 +46,9 @@ export function ErrorProvider({children}: ErrorProviderProps) {
 
   const pushError = useCallback(
     (err: DeezerApiError | Error) => {
-      setErrors([...errors, err]);
+      if (ENVIRONMENT === 'DEV' || (err as DeezerApiError).deezerCode) {
+        setErrors([...errors, err]);
+      }
     },
     [errors],
   );

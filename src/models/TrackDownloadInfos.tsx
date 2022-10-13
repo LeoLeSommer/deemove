@@ -75,12 +75,12 @@ function generateStreamPath(
   md5: string,
   format: keyof typeof TrackFormats = 'MP3_128',
 ) {
-  const step1 = [md5, TrackFormats[format], id, mediaVersion].join('¤');
+  let urlPart = `${md5}¤${format}¤${id}¤${mediaVersion}`;
+  let md5val = md5Encrypt(urlPart);
 
-  let step2 = `${md5Encrypt(step1)}¤${step1}¤`;
-  while (step2.length % 16 > 0) {
-    step2 += ' ';
-  }
+  let step2 = `${md5val}¤${urlPart}¤`;
+  step2 += '.'.repeat(16 - (step2.length % 16));
+
   const step3 = ecbEncrypt('jo6aey6haid2Teih', step2);
   return step3;
 }

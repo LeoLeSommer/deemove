@@ -10,6 +10,7 @@ import useUser from '../hooks/user';
 import useSettings from '../hooks/settings';
 import locales from '../locales';
 import {SettingsParamList} from './SettingsScreen';
+import {ENVIRONMENT} from '../utils/config';
 
 export default function SettingsBaseScreen() {
   const {accessToken, offlineMode, logout} = useUser();
@@ -110,10 +111,12 @@ export default function SettingsBaseScreen() {
           }
           onPress={logout}
         />
-        <List.Item
-          title={locales.settings.copyTokenToClipboard}
-          onPress={copyTokenToClipboard}
-        />
+        {ENVIRONMENT === 'DEV' && (
+          <List.Item
+            title={locales.settings.copyTokenToClipboard}
+            onPress={copyTokenToClipboard}
+          />
+        )}
       </ScrollView>
     </SafeAreaView>
   );

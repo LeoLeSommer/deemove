@@ -2,15 +2,11 @@ import {useCallback} from 'react';
 import axios from 'axios';
 import {Cookie} from 'tough-cookie';
 import useCookie from '../hooks/cookie';
-import {
-  CLIENT_ID,
-  CLIENT_SECRET,
-  httpHeaders,
-  throwDeezerErrorIfNeeded,
-} from '../hooks/api';
+import {httpHeaders, throwDeezerErrorIfNeeded} from '../hooks/api';
 import useError from '../hooks/error';
 import {md5Encrypt} from '../utils/crypto';
 import {DeezerApiError} from '../models/DeezerApiError';
+import {DEEZER_CLIENT_ID, DEEZER_CLIENT_SECRET} from '../utils/config';
 
 export function useLogin() {
   const {setCookie} = useCookie();
@@ -21,12 +17,12 @@ export function useLogin() {
       try {
         password = md5Encrypt(password);
         const hash = md5Encrypt(
-          [CLIENT_ID, email, password, CLIENT_SECRET].join(''),
+          [DEEZER_CLIENT_ID, email, password, DEEZER_CLIENT_SECRET].join(''),
         );
 
         let response = await axios.get('https://api.deezer.com/auth/token', {
           params: {
-            app_id: CLIENT_ID,
+            app_id: DEEZER_CLIENT_ID,
             login: email,
             password,
             hash,

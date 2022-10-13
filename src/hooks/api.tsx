@@ -7,8 +7,6 @@ import useCookie from './cookie';
 import {DeezerApiError} from '../models/DeezerApiError';
 import useError from './error';
 
-export const CLIENT_ID = '172365';
-export const CLIENT_SECRET = 'fb0bec7ccc063dab0417eb7b0d847f34';
 export const httpHeaders = {
   Host: 'www.deezer.com',
   Origin: 'https://www.deezer.com',
