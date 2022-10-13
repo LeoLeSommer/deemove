@@ -19,7 +19,7 @@ import {
   useIsFavoriteTrack,
   useLikeOrUnlikeTrack,
 } from '../../api/favoriteTracks';
-import useTrackStorage from '../../hooks/trackStorage';
+import useTrackStorage, {useStoredTrack} from '../../hooks/trackStorage';
 
 export type TrackListItemProps = {
   track: Track;
@@ -28,32 +28,44 @@ export type TrackListItemProps = {
 export default function TrackListItem({track}: TrackListItemProps) {
   const {offlineMode} = useUser();
   const status = useTrackStatus(track);
-  const {playTrack, addTrackToQueue, pause, currentTrack, state} = usePlayer();
+  const {
+    playTrack,
+    addTrackToQueue,
+    pause,
+    track: playingTrack,
+    state,
+  } = usePlayer();
   const [menuVisible, setMenuVisible] = useState(false);
   const {addToDownloadQueue, isInDownloadQueue} = useDownloadQueue();
   const {downloadDirectory} = useSettings();
   const filepath = getTrackFilepath(downloadDirectory, track);
+  const storedTrack = useStoredTrack(filepath);
   const isFavorite = useIsFavoriteTrack(track.id);
   const likeOrUnlike = useLikeOrUnlikeTrack(track.id);
   const {deleteTrack} = useTrackStorage();
 
   const isPlaying = useMemo(
-    () => currentTrack === track.id && state === 'playing',
-    [currentTrack, track.id, state],
+    () =>
+      playingTrack &&
+      playingTrack.artist === track.artist &&
+      playingTrack.album === track.album &&
+      playingTrack.title === track.title &&
+      state === 'playing',
+    [playingTrack, track, state],
   );
 
   const play = useCallback(() => {
-    if (filepath && status === 'downloaded' && !isPlaying) {
-      playTrack(filepath);
+    if (storedTrack && status === 'downloaded' && !isPlaying) {
+      playTrack({type: 'stored', track: storedTrack});
     }
-  }, [playTrack, filepath, status, isPlaying]);
+  }, [playTrack, storedTrack, status, isPlaying]);
 
   const addToQueue = useCallback(() => {
-    if (status === 'downloaded' && !isPlaying) {
-      addTrackToQueue(track.id);
+    if (storedTrack && status === 'downloaded' && !isPlaying) {
+      addTrackToQueue({type: 'stored', track: storedTrack});
     }
     setMenuVisible(false);
-  }, [addTrackToQueue, track.id, status, isPlaying]);
+  }, [addTrackToQueue, storedTrack, status, isPlaying]);
 
   // Hide menu for not downloaded tracks
   useEffect(() => {

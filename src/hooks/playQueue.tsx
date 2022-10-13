@@ -4,34 +4,50 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from 'react';
-import {Platform} from 'react-native';
 import TrackPlayer, {
   Event,
-  PlaybackTrackChangedEvent,
-  RemoteSkipEvent,
   PlaybackStateEvent,
   State,
   useProgress,
   useTrackPlayerEvents,
 } from 'react-native-track-player';
 import {match} from 'ts-pattern';
-import useTrackStorage from './trackStorage';
+import {LocalTrack} from '../models/LocalTrack';
+import {Track} from '../models/Track';
 
 export type PlayQueueState = 'stopped' | 'playing' | 'paused';
 
+export type PlayQueueSource =
+  | {
+      type: 'stored';
+      track: LocalTrack;
+    }
+  | {
+      type: 'remote';
+      track: Track;
+    };
+
 export type PlayQueueContext = {
-  playTrack: (path: string) => Promise<void>;
-  addTrackToQueue: (path: string) => Promise<void>;
-  play: () => Promise<void>;
-  pause: () => Promise<void>;
-  stop: () => Promise<void>;
-  status: () => Promise<void>;
+  playTrack: (src: PlayQueueSource) => void;
+  addTrackToQueue: (src: PlayQueueSource) => void;
+  play: () => void;
+  pause: () => void;
+  stop: () => void;
+  next: () => void;
+  previous: () => void;
+  isPlayingTrack: (src: PlayQueueSource) => boolean;
+  track: {
+    title: string;
+    artist: string;
+    album: string;
+    coverPath: string;
+  } | null;
   state: PlayQueueState;
-  currentTrack: string | null;
-  previousTrack: string | null;
-  nextTrack: string | null;
+  hasPreviousTrack: boolean;
+  hasNextTrack: boolean;
 };
 
 const PlayQueueContext = createContext<PlayQueueContext>({} as any);
@@ -41,11 +57,10 @@ export type PlayQueueProviderProps = {
 };
 
 export function PlayQueueProvider({children}: PlayQueueProviderProps) {
-  const {tracks} = useTrackStorage();
-  const [currentTrack, setCurrentTrack] = useState<string | null>(null);
-  const [nextTrack, setNextTrack] = useState<string | null>(null);
-  const [previousTrack /*, setPreviousTrack*/] = useState<string | null>(null);
+  const [queue, setQueue] = useState<PlayQueueSource[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [state, setState] = useState<PlayQueueState>('stopped');
+  const currentSource = queue[currentIndex];
 
   // Initialize
   useEffect(() => {
@@ -55,64 +70,140 @@ export function PlayQueueProvider({children}: PlayQueueProviderProps) {
     TrackPlayer.setupPlayer();
   }, []);
 
+  const playTrack = useCallback((src: PlayQueueSource) => {
+    setQueue([src]);
+    setCurrentIndex(0);
+  }, []);
+
+  const addTrackToQueue = useCallback(
+    (src: PlayQueueSource) => {
+      setQueue([...queue, src]);
+    },
+    [queue],
+  );
+
+  const play = useCallback(() => {
+    TrackPlayer.play();
+  }, []);
+
+  const pause = useCallback(() => {
+    TrackPlayer.pause();
+  }, []);
+
+  const stop = useCallback(() => {
+    TrackPlayer.reset();
+    setQueue([]);
+    setCurrentIndex(0);
+  }, []);
+
+  const hasNextTrack = useMemo(
+    () => currentIndex < queue.length - 1,
+    [queue, currentIndex],
+  );
+
+  const hasPreviousTrack = useMemo(() => currentIndex > 0, [currentIndex]);
+
+  const next = useCallback(() => {
+    if (hasNextTrack) {
+      setCurrentIndex(currentIndex + 1);
+    }
+  }, [currentIndex, hasNextTrack]);
+
+  const previous = useCallback(() => {
+    if (hasPreviousTrack) {
+      setCurrentIndex(currentIndex - 1);
+    }
+  }, [currentIndex, hasPreviousTrack]);
+
+  const isPlayingTrack = useCallback(
+    (src: PlayQueueSource) => {
+      return (
+        currentSource &&
+        src.type === currentSource.type &&
+        match(src)
+          .with(
+            {type: 'stored'},
+            elem =>
+              elem.track.path === (currentSource.track as LocalTrack).path,
+          )
+          .with(
+            {type: 'remote'},
+            elem => elem.track.id === (currentSource.track as Track).id,
+          )
+          .exhaustive()
+      );
+    },
+    [currentSource],
+  );
+
   // Track external event
   useTrackPlayerEvents([Event.RemotePlay], () => {
-    TrackPlayer.play();
+    play();
   });
 
   useTrackPlayerEvents([Event.RemotePause], () => {
-    TrackPlayer.pause();
-  });
-
-  useTrackPlayerEvents([Event.RemoteNext], () => {
-    TrackPlayer.skipToNext();
-  });
-
-  if (Platform.OS === 'android') {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useTrackPlayerEvents([Event.RemoteSkip], (event: RemoteSkipEvent) => {
-      TrackPlayer.skip(event.index);
-    });
-  }
-
-  useTrackPlayerEvents([Event.RemotePrevious], () => {
-    TrackPlayer.skipToPrevious();
+    pause();
   });
 
   useTrackPlayerEvents([Event.RemoteStop], () => {
-    TrackPlayer.reset();
-    setCurrentTrack(null);
-    setNextTrack(null);
+    stop();
   });
 
-  // Update current track id when the player is changing track
-  useTrackPlayerEvents(
-    [Event.PlaybackTrackChanged],
-    async (event: PlaybackTrackChangedEvent) => {
-      if (event.track) {
-        const track = await TrackPlayer.getTrack(event.track);
+  useTrackPlayerEvents([Event.RemoteNext], () => {
+    next();
+  });
 
-        if (track) {
-          setCurrentTrack(track.id);
-        } else {
-          setCurrentTrack(null);
-        }
+  useTrackPlayerEvents([Event.RemotePrevious], () => {
+    previous();
+  });
+
+  // The track is over so we need to load the next music if we can
+  useTrackPlayerEvents([Event.PlaybackQueueEnded], () => {
+    next();
+  });
+
+  // When the track index change, we load the next track
+  useEffect(() => {
+    const isPlayingTrackId = async (id: string) => {
+      const trackIndex = await TrackPlayer.getCurrentTrack();
+
+      if (trackIndex === null) {
+        return false;
       }
 
-      if (event.nextTrack) {
-        const track = await TrackPlayer.getTrack(event.nextTrack);
+      const track = await TrackPlayer.getTrack(trackIndex);
 
-        if (track) {
-          setNextTrack(track.id);
-        } else {
-          setNextTrack(null);
+      if (track === null) {
+        return false;
+      }
+
+      return track.id === id;
+    };
+
+    const fetchData = async (src: PlayQueueSource) => {
+      if (src.type === 'stored') {
+        if (!(await isPlayingTrackId(src.track.path))) {
+          await TrackPlayer.reset();
+          await TrackPlayer.add({
+            id: src.track.path,
+            url: src.track.path,
+            title: src.track.title,
+            artist: src.track.artist,
+            album: src.track.album,
+          });
+          await TrackPlayer.play();
+        }
+      } else if (src.type === 'remote') {
+        if (!(await isPlayingTrackId(src.track.id))) {
+          return;
         }
       }
-    },
-  );
+    };
+
+    fetchData(currentSource);
+  }, [currentSource]);
 
   // Update player state
-
   useTrackPlayerEvents([Event.PlaybackState], (event: PlaybackStateEvent) => {
     setState(
       match(event.state)
@@ -127,74 +218,26 @@ export function PlayQueueProvider({children}: PlayQueueProviderProps) {
     );
   });
 
-  const playTrack = useCallback(
-    async (path: string) => {
-      const track = tracks[path]?.track;
-
-      if (track) {
-        await TrackPlayer.reset();
-        await TrackPlayer.add({
-          id: path,
-          url: path,
-          title: track.title,
-          artist: track.artist,
-          album: track.album,
-        });
-        await TrackPlayer.play();
-
-        setCurrentTrack(path);
-        setNextTrack(null);
-      }
-    },
-    [tracks],
-  );
-
-  const addTrackToQueue = useCallback(
-    async (path: string) => {
-      const track = tracks[path]?.track;
-
-      if (track) {
-        await TrackPlayer.add({
-          id: path,
-          url: path,
-          title: track.title,
-          artist: track.artist,
-          album: track.album,
-        });
-      }
-    },
-    [tracks],
-  );
-
-  const play = useCallback(async () => {
-    await TrackPlayer.play();
-  }, []);
-
-  const pause = useCallback(async () => {
-    await TrackPlayer.pause();
-  }, []);
-
-  const stop = useCallback(async () => {
-    await TrackPlayer.reset();
-    setCurrentTrack(null);
-    setNextTrack(null);
-  }, []);
-
-  const status = useCallback(async () => {
-    await TrackPlayer.pause();
-  }, []);
-
   const result = {
     playTrack,
     addTrackToQueue,
     play,
     pause,
     stop,
-    status,
+    next,
+    previous,
+    isPlayingTrack,
+    track: currentSource?.track
+      ? {
+          ...currentSource.track,
+          coverPath:
+            (currentSource.track as LocalTrack).coverPath ||
+            (currentSource.track as Track).imageLargeUrl,
+        }
+      : null,
     state,
-    currentTrack,
-    previousTrack,
-    nextTrack,
+    hasPreviousTrack,
+    hasNextTrack,
   };
 
   return (

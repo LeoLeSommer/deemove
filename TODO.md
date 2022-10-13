@@ -11,8 +11,8 @@
 - [x] Add a music queue system
 - [x] Add a way to remove downloaded tracks
 - [x] Add a way to select how many parallel download are allowed
+- [x] Add a play queue system
 - [ ] Add a way to download an entire playlist/album/my favorites ...
-- [ ] Add a play queue system
 - [ ] Handle requests errors
 - [ ] Renew token when needed
 - [ ] Improve interface
@@ -20,3 +20,5 @@
 - [ ] Bonus: offline playlist
 - [ ] Bonus: be able to stream encrypted musics
 - [ ] Bonus: send tracking informations to deezer to update the algorithm settings (gw method=log.listen)
+- [ ] Issue: Most of the downloaded musics have some glitches
+- [ ] Issue: Some download encrypted URLs are not corrects, for example "Où va le monde" from "La femme"

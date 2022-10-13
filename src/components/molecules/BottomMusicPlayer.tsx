@@ -14,18 +14,18 @@ import {
 import {useTrackFromLabels} from '../../api/track';
 import useMusicPlayerScreen from '../../hooks/musicPlayerScreen';
 import usePlayer, {usePlayProgress} from '../../hooks/playQueue';
-import {useStoredTrack} from '../../hooks/trackStorage';
 import useUser from '../../hooks/user';
 
 export default function BottomMusicPlayer() {
   const theme = useTheme();
-  const {play, pause, currentTrack, nextTrack, state} = usePlayer();
+  const {play, pause, next, hasNextTrack, state, track} = usePlayer();
   const {progress} = usePlayProgress();
-  const track = useStoredTrack(currentTrack);
   const {showMusicPlayer} = useMusicPlayerScreen();
 
   const {offlineMode} = useUser();
   const {data: onlineTrack} = useTrackFromLabels(track);
+  console.log('online track', onlineTrack);
+
   const isFavorite = useIsFavoriteTrack(onlineTrack?.id);
   const likeOrUnlike = useLikeOrUnlikeTrack(onlineTrack?.id);
 
@@ -62,12 +62,8 @@ export default function BottomMusicPlayer() {
               )}
             </>
           )}
-          {nextTrack && (
-            <IconButton
-              icon="arrow-collapse-right"
-              size={26}
-              onPress={() => {}}
-            />
+          {hasNextTrack && (
+            <IconButton icon="arrow-collapse-right" size={26} onPress={next} />
           )}
         </View>
         <ProgressBar progress={progress} />

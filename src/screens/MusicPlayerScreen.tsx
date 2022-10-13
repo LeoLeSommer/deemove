@@ -13,7 +13,6 @@ import AnimatedLinearGradient from 'react-native-animated-linear-gradient';
 import mix from 'mix-css-color';
 import Slider from '../components/input/Slider';
 import usePlayer, {usePlayProgress} from '../hooks/playQueue';
-import {useStoredTrack} from '../hooks/trackStorage';
 import useMusicPlayerScreen from '../hooks/musicPlayerScreen';
 import useUser from '../hooks/user';
 import {useTrackFromLabels} from '../api/track';
@@ -24,10 +23,17 @@ const loopIcon = require('../assets/loop-icon.svg');
 
 export default function MusicPlayerScreen() {
   const theme = useTheme();
-  const {play, pause, currentTrack, nextTrack, previousTrack, state} =
-    usePlayer();
+  const {
+    play,
+    pause,
+    previous,
+    next,
+    hasPreviousTrack,
+    hasNextTrack,
+    state,
+    track,
+  } = usePlayer();
   const {progress, setProgress} = usePlayProgress();
-  const track = useStoredTrack(currentTrack);
   const {hideMusicPlayer} = useMusicPlayerScreen();
 
   const {offlineMode} = useUser();
@@ -102,9 +108,9 @@ export default function MusicPlayerScreen() {
             />
             <IconButton
               icon="arrow-collapse-left"
-              disabled={previousTrack === null}
+              disabled={!hasPreviousTrack}
               size={32}
-              onPress={() => {}}
+              onPress={previous}
             />
             {state === 'paused' ? (
               <IconButton
@@ -123,9 +129,9 @@ export default function MusicPlayerScreen() {
             )}
             <IconButton
               icon="arrow-collapse-right"
-              disabled={nextTrack === null}
+              disabled={!hasNextTrack}
               size={32}
-              onPress={() => {}}
+              onPress={next}
             />
             <IconButton
               icon={({color, size}) => (
