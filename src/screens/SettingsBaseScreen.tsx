@@ -3,7 +3,7 @@ import {SafeAreaView, ScrollView, StyleSheet} from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 import RNFetchBlob from 'react-native-blob-util';
 import {Appbar, List, useTheme, Switch, Menu} from 'react-native-paper';
-import {selectDirectory} from 'react-native-directory-picker';
+import {pickDirectory} from 'react-native-document-picker';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import useUser from '../hooks/user';
@@ -29,8 +29,8 @@ export default function SettingsBaseScreen() {
     useState(false);
 
   const pickDownloadDirectory = useCallback(async () => {
-    const result = await selectDirectory();
-    const newDirectory = result && (await RNFetchBlob.fs.stat(result)).path;
+    const result = await pickDirectory();
+    const newDirectory = result && (await RNFetchBlob.fs.stat(result.uri)).path;
 
     if (newDirectory) {
       setDownloadDirectory(newDirectory);
