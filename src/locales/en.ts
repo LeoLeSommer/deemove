@@ -1,0 +1,71 @@
+export default {
+  common: {
+    deemove: 'Deemove',
+    email: 'Email',
+    password: 'Password',
+    listen: 'Listen',
+  },
+  login: {
+    logToDeezer: 'Login to Deezer',
+    login: 'Login',
+    offlineMode: 'Continue in offline mode',
+  },
+  tabs: {
+    music: 'Music',
+    favorites: 'Favorites',
+    library: 'My library',
+    settings: 'Settings',
+  },
+  home: {
+    search: 'Search',
+    displayEverything: 'Display everything',
+    tracks: 'Tracks',
+    artists: 'Artists',
+    albums: 'Albums',
+    playlists: 'Playlists',
+    recommendedArtists: 'Your artist recommendations',
+    recommendedTracks: "You'll like",
+    recommendedPaylists: 'Playlists recommended for you',
+    trendyTracks: 'The trendy tracks',
+    trendyAlbums: 'Les popular albums',
+    trendyPlaylists: 'The most listened playlists',
+    trendyArtists: 'The trendy artists',
+  },
+  artist: {
+    tracks: 'Tracks',
+    topTracks: 'Tracks top',
+    discography: 'Discography',
+    relatedArtists: 'Related artists',
+    playlists: 'Playlists',
+  },
+  favorites: {
+    tracks: 'Tracks',
+    artists: 'Artists',
+    albums: 'Albums',
+    playlists: 'Playlists',
+  },
+  library: {
+    tracks: 'Tracks',
+    artists: 'Artists',
+    albums: 'Albums',
+    playlists: 'Playlists',
+  },
+  track: {
+    addToTrackQueue: 'Ajouter à la liste de lecture',
+    deleteTrack: 'Supprimer la piste',
+  },
+  settings: {
+    downloadQueue: 'Download queue',
+    darkMode: 'Dark mode',
+    downloadDirectory: 'Download folder',
+    simultaneousDownloads: 'Simultaneous downloads',
+    logout: 'Logout',
+    quitOfflineMode: 'Exit offline mode',
+    copyTokenToClipboard: 'Copy access token to clipboard',
+  },
+  errors: {
+    LOGIN_FAILED: 'We could not connect you, please verify your credentials',
+    INCORRECT_REGION:
+      'We could not connect you, you are probably trying to access Deezer from a region not covered by the free offer',
+  },
+};

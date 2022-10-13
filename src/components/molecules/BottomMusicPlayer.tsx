@@ -24,7 +24,6 @@ export default function BottomMusicPlayer() {
 
   const {offlineMode} = useUser();
   const {data: onlineTrack} = useTrackFromLabels(track);
-  console.log('online track', onlineTrack);
 
   const isFavorite = useIsFavoriteTrack(onlineTrack?.id);
   const likeOrUnlike = useLikeOrUnlikeTrack(onlineTrack?.id);

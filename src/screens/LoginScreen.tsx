@@ -37,8 +37,8 @@ export default function LoginScreen() {
         </View>
         <Form
           initialValues={{
-            email: 'leo.le-sommer@hotmail.fr',
-            password: 'Ofcourseir0ck',
+            email: '',
+            password: '',
           }}
           onSubmit={handleLogin}>
           <View style={styles.formContainer}>
