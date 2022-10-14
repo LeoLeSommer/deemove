@@ -169,9 +169,13 @@ async function downloadTrack(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   dispatch: React.Dispatch<TrackStorageAction>,
 ) {
-  return RNFetchBlob.config({
+  const response = await RNFetchBlob.config({
     path: tempFilepath,
   }).fetch('GET', downloadInfos.url);
+
+  if (response.info().status !== 200) {
+    throw response.data;
+  }
   /*.progress((received, total) => {
       dispatch({
         type: 'DOWNLOAD_PENDING',
