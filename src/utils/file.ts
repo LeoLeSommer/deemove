@@ -1,5 +1,6 @@
 import RNFetchBlob from 'react-native-blob-util';
 import path from 'path-browserify';
+import jsmediatags from 'jsmediatags';
 
 /**
  * List recursively the files located into a directory
@@ -27,4 +28,23 @@ export async function recursiveLs(dirpath: string): Promise<string[]> {
   await Promise.all(promises);
 
   return filenames;
+}
+
+export function readMetaTags(filepath: string): Promise<{
+  title?: string;
+  artist?: string;
+  album?: string;
+}> {
+  return new Promise((resolve, reject) => {
+    new jsmediatags.Reader(filepath)
+      .setTagsToRead(['title', 'artist', 'album'])
+      .read({
+        onSuccess: tag => {
+          resolve(tag.tags);
+        },
+        onError: error => {
+          reject(error);
+        },
+      });
+  });
 }

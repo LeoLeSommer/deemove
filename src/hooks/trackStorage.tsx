@@ -7,8 +7,6 @@ import React, {
   useCallback,
 } from 'react';
 import pathBrowserify from 'path-browserify';
-// @ts-ignore
-import MediaMeta from 'react-native-media-meta';
 import RNFetchBlob from 'react-native-blob-util';
 import {match} from 'ts-pattern';
 import {uniqBy} from 'lodash';
@@ -19,7 +17,7 @@ import {Track} from '../models/Track';
 import {Artist} from '../models/Artist';
 import {Album} from '../models/Album';
 import useSettings from './settings';
-import {recursiveLs} from '../utils/file';
+import {readMetaTags, recursiveLs} from '../utils/file';
 import {upsert} from '../utils/array';
 import {getTrackFilepath} from '../api/download';
 
@@ -283,7 +281,7 @@ export function TrackStorageProvider({children}: TrackStorageProviderProps) {
               filepath,
             });
 
-            const tags = await MediaMeta.get(filepath);
+            const tags = await readMetaTags(filepath);
 
             const track = {
               title: tags.title,

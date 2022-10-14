@@ -105,8 +105,10 @@ export function useDownloadTrack() {
           dispatch,
         );
 
-        // Decrypt the track
+        // Delete the old track if exists
         await deleteIfExists(filepath);
+
+        // Decrypt the track
         await decryptTrack(
           tempFilepath,
           filepath,
@@ -164,20 +166,20 @@ async function downloadTrack(
   filepath: string,
   tempFilepath: string,
   downloadInfos: TrackDownloadInfos,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   dispatch: React.Dispatch<TrackStorageAction>,
 ) {
   return RNFetchBlob.config({
     path: tempFilepath,
-  })
-    .fetch('GET', downloadInfos.url)
-    .progress((received, total) => {
+  }).fetch('GET', downloadInfos.url);
+  /*.progress((received, total) => {
       dispatch({
         type: 'DOWNLOAD_PENDING',
         trackId,
         filepath,
         progress: received / total,
       });
-    });
+    });*/
 }
 
 async function decryptTrack(
