@@ -41,6 +41,7 @@
     "react-native-config": "^1.4.11",
     "react-native-document-picker": "^8.1.1",
     "react-native-draggable-flatlist": "^3.1.2",
+    "react-native-fs": "^2.20.0",
     "react-native-gesture-handler": "^2.6.2",
     "react-native-linear-gradient": "^2.6.2",
     "react-native-loading-spinner-overlay": "^3.0.1",

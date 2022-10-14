@@ -1,6 +1,6 @@
 import RNFetchBlob from 'react-native-blob-util';
 import path from 'path-browserify';
-import jsmediatags from 'jsmediatags';
+import jsmediatags from 'jsmediatags/build2/jsmediatags';
 
 /**
  * List recursively the files located into a directory
@@ -36,15 +36,19 @@ export function readMetaTags(filepath: string): Promise<{
   album?: string;
 }> {
   return new Promise((resolve, reject) => {
-    new jsmediatags.Reader(filepath)
-      .setTagsToRead(['title', 'artist', 'album'])
-      .read({
+    try {
+      new jsmediatags.Reader(filepath).read({
         onSuccess: tag => {
+          console.log('Success!');
           resolve(tag.tags);
         },
         onError: error => {
+          console.log('Error');
           reject(error);
         },
       });
+    } catch (error) {
+      reject(error);
+    }
   });
 }

@@ -15,11 +15,13 @@ import TextField from '../components/form/TextField';
 import style from '../constants/style';
 import locales from '../locales';
 import useUser from '../hooks/user';
+import useKeyboard from '../hooks/keyboard';
 
 const logo = require('../assets/logo.png');
 
 export default function LoginScreen() {
   const {login, useOfflineMode} = useUser();
+  const {keyboardShown} = useKeyboard();
 
   const {mutateAsync: handleLogin, isLoading} = useMutation(
     ({email, password}: {email: string; password: string}) => {
@@ -31,10 +33,12 @@ export default function LoginScreen() {
     <KeyboardAvoidingView>
       <SafeAreaView style={styles.container}>
         <Spinner visible={isLoading} />
-        <View style={styles.headerContainer}>
-          <Image source={logo} />
-          <Title>{locales.common.deemove}</Title>
-        </View>
+        {!keyboardShown && (
+          <View style={styles.headerContainer}>
+            <Image source={logo} />
+            <Title>{locales.common.deemove}</Title>
+          </View>
+        )}
         <Form
           initialValues={{
             email: '',
