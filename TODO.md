@@ -12,12 +12,12 @@
 - [x] Add a way to remove downloaded tracks
 - [x] Add a way to select how many parallel download are allowed
 - [x] Add a play queue system
+- [x] Add translations at least for english
 - [ ] Put the file decrypt/download into a multi-thread kotlin module to free the main thread
 - [ ] Add a way to download an entire playlist/album/my favorites ...
 - [ ] Handle requests errors
 - [ ] Renew token when needed
 - [ ] Improve interface
-- [ ] Add translations at least for english
 - [ ] Bonus: offline playlist
 - [ ] Bonus: be able to stream encrypted musics
 - [ ] Bonus: send tracking informations to deezer to update the algorithm settings (gw method=log.listen)
